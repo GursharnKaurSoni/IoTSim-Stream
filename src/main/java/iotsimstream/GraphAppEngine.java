@@ -1,6 +1,7 @@
 package iotsimstream;
 
 import iotsimstream.vmOffers.VMOffers;
+import iotsimstream.edge.EdgeDataCenter;
 import iotsimstream.schedulingPolicies.Policy;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -9,6 +10,8 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+
 import org.cloudbus.cloudsim.Cloudlet;
 import org.cloudbus.cloudsim.DatacenterCharacteristics;
 import org.cloudbus.cloudsim.Log;
@@ -45,10 +48,11 @@ public class GraphAppEngine extends SimEntity{
 	private Hashtable<Integer,ArrayList<Integer>> schedulingTable;
 	private Hashtable<Integer,SVM> vmTable;
         private List<? extends ServiceCloudlet> cloudletReceivedList;
-        private ArrayList<ExternalSource> externSources;
+        private ArrayList<IotDevice> iotSources;
         private HashMap<Integer, Service> serviceMap;
         private HashMap<Integer, Integer> ProSVMDatacenterMap;
-        private ArrayList<Integer> datacenters;
+        //private ArrayList<Integer> datacenters;
+        private Map<Integer,String> datacenters;
         private HashMap<Integer, Boolean> datacenterInitializeMap;
         private LinkedHashMap<Integer, VMOffers> datacenterWithVMOffers; //needed to preserver the order for later use
         private ArrayList<Service> services;
@@ -78,9 +82,10 @@ public class GraphAppEngine extends SimEntity{
                 
                 
                 streamRequiredLocation=new Hashtable<Integer,HashSet<Integer>>();
-                externSources=new ArrayList<ExternalSource>();
+                iotSources=new ArrayList<IotDevice>();
                 serviceMap=new HashMap<Integer, Service>();
-                datacenters=new ArrayList<Integer>();
+                //datacenters=new ArrayList<Integer>();
+                datacenters=new HashMap<Integer,String>();
                 datacenterInitializeMap=new HashMap<>();
                 datacenterWithVMOffers=new LinkedHashMap<Integer,VMOffers>();
                 ProSVMDatacenterMap=new HashMap<Integer,Integer>();
@@ -115,7 +120,9 @@ public class GraphAppEngine extends SimEntity{
             //Get datacenter characteristics and add its id in the list (i.e. add datacenter ID in the list)
             DatacenterCharacteristics characteristics=(DatacenterCharacteristics) ev.getData();
             int datacenterid=characteristics.getId();
-            datacenters.add(datacenterid);  
+            //datacenters.add(datacenterid); 
+            SimEntity source = CloudSim.getEntity(ev.getSource());
+            datacenters.put(datacenterid, source.getName());
             datacenterIDsMap.put(datacenterid, datacenterCount);
             datacenterInitializeMap.put(datacenterid, Boolean.TRUE);
             datacenterCount++;
@@ -163,7 +170,7 @@ public class GraphAppEngine extends SimEntity{
                 graphAppCloudlet=new GraphAppClouldlet(services);
                 
                 //Get external sources
-                externSources=policy.getExternalSources();
+                iotSources=policy.getIoTSources();
                 
 		//trigger creation of vms
 		createVMs(vms);
@@ -203,15 +210,23 @@ public class GraphAppEngine extends SimEntity{
             }
         }
         
-        private void collectVMOffers()
-        {
-            for(Integer datacenterID: datacenters)
-            {
-                BigDatacenter datacenter=(BigDatacenter) CloudSim.getEntity(datacenterID);
-                datacenterWithVMOffers.put(datacenterID, datacenter.vmOffers);
-                datacenter.vmOffers.getVmOffers(); //this statement is required to fill vmOffersTable (initilization) for vmOffer object
-            }
-        }
+		private void collectVMOffers() {
+			
+			for (Map.Entry<Integer, String> entry : datacenters.entrySet()) {
+				Integer datacenterID = entry.getKey();
+				String dataCenterName = entry.getValue();
+				if (dataCenterName.contains("Edge")) {
+					EdgeDataCenter datacenter = (EdgeDataCenter) CloudSim.getEntity(datacenterID);
+					datacenterWithVMOffers.put(datacenterID, datacenter.vmOffers);
+					datacenter.vmOffers.getVmOffers();
+				} else {
+					BigDatacenter datacenter = (BigDatacenter) CloudSim.getEntity(datacenterID);
+					datacenterWithVMOffers.put(datacenterID, datacenter.vmOffers);
+					datacenter.vmOffers.getVmOffers();
+				}
+			}
+
+		}
         
 	protected void processVmCreate(SimEvent ev) {
 		int[] data = (int[]) ev.getData();
@@ -251,22 +266,20 @@ public class GraphAppEngine extends SimEntity{
                     startEXSourceStreams();
                 }
 	}
-	
+
 	private void processStartDelay() {
-	
-                //Add all datacenters ids to datacenterInitializeMap and their values are false in order to allow checking their initialization later on (when receiving reosurce_characteristics event from each one)
-                for(Integer resid: CloudSim.getCloudResourceList())
-                {
-                  BigDatacenter datacenter=(BigDatacenter) CloudSim.getEntity(resid);
-                  datacenterInitializeMap.put(datacenter.getId(), Boolean.FALSE);  
-                }
-                
-                // we gave data center enough time to initialize. Start the action...
-                for(Integer resid: CloudSim.getCloudResourceList())
-                {
-                  BigDatacenter datacenter=(BigDatacenter) CloudSim.getEntity(resid);
-                  sendNow(datacenter.getId(), CloudSimTags.RESOURCE_CHARACTERISTICS, getId());
-                }
+
+		for (Integer resid : CloudSim.getCloudResourceList()) {
+			if (CloudSim.getEntity(resid).getName().contains("Edge")) {
+				EdgeDataCenter datacenter = (EdgeDataCenter) CloudSim.getEntity(resid);
+				datacenterInitializeMap.put(datacenter.getId(), Boolean.FALSE);
+				sendNow(datacenter.getId(), CloudSimTags.RESOURCE_CHARACTERISTICS, getId());
+			} else {
+				BigDatacenter datacenter = (BigDatacenter) CloudSim.getEntity(resid);
+				datacenterInitializeMap.put(datacenter.getId(), Boolean.FALSE);
+				sendNow(datacenter.getId(), CloudSimTags.RESOURCE_CHARACTERISTICS, getId());
+			}
+		}
 	}
 
 	@Override
@@ -346,11 +359,11 @@ public class GraphAppEngine extends SimEntity{
 	
         protected void startEXSourceStreams()
         {
-            for(int i=0;i<externSources.size();i++)
+            for(int i=0;i<iotSources.size();i++)
             {
-                ExternalSource ex=externSources.get(i);
+                IotDevice ex=iotSources.get(i);
                 int exid=ex.getId();
-                sendNow(exid,ExternalSource.SEND_STREAM);
+                sendNow(exid,IotDevice.SEND_STREAM);
             }
         }
         
@@ -360,9 +373,9 @@ public class GraphAppEngine extends SimEntity{
             
             String printTotalOfProcessedStreamsPerCloudlet="";
             //Stop sending more streams from External Sources
-            for(ExternalSource ex: externSources)
+            for(IotDevice ex: iotSources)
             {
-                sendNow(ex.getId(), ExternalSource.STOP_SENDING_STREAM);
+                sendNow(ex.getId(), IotDevice.STOP_SENDING_STREAM);
             }
             
             //Stop services and their cloudlets

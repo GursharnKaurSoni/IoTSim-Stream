@@ -24,7 +24,9 @@ public enum Configuration {
             try {
                 //Properties file in resources package
                 FileInputStream propfile = new FileInputStream("src/main/java/iotsimstream/resources/simulation.properties");
+                FileInputStream edgePropFile = new FileInputStream("src/main/java/iotsimstream/resources/EdgeSimulation.properties");
                 properties.load(propfile);
+                properties.load(edgePropFile);
             } catch (IOException ex) {
                 Logger.getLogger(Configuration.class.getName()).log(Level.SEVERE, null, ex);
             }

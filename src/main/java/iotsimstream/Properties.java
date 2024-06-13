@@ -32,7 +32,8 @@ public enum Properties {
         EXTERNAL_LATENCY("external.latency"),
 	EXTERNAL_BANDWIDTH("external.bandwidth"),
 	SCHEDULING_POLICY("scheduling.policy"),
-	DAG_FILE("dag.file")
+	DAG_FILE("dag.file"),
+	EDGE_DATACENTER("edge.datacenter")
         ;
 	
 	private String key;
