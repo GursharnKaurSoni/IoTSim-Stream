@@ -2,6 +2,13 @@ package iotsimstream.edge;
 
 import iotsimstream.Configuration;
 
+/**
+ * This class contains the parameters from the simulation that
+ * are customizable by users. They are defined in a file called
+ * EdgeSimulation.properties that has to be in Java's classpath.
+ * 
+ * @author Gursharn Soni
+ */
 public enum EdgeProperties {
 
 	SIMULATION_TIME("edge.simulation.time"), 
@@ -16,7 +23,6 @@ public enum EdgeProperties {
 	EDGE_MIPS_PERCORE("edge.host.cores.mips"),
 	EDGE_HOST_STORAGE("edge.host.storage"),
 	EDGE_DATACENTER_NAME("edge.datacenter.name"),
-	EDGE_SCHEDULING_INTERVAL("edge.scheduling.interval"),
 	EDGE_HOST_MEMORY("edge.host.memory"),
 	EDGE_DATACENTER_PROXIMITY("edge.datacenter.proximity"),
 	EDGE_VM_DELAY("edge.vm.delay"),

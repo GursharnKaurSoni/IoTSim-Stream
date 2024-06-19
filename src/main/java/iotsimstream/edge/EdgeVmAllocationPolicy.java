@@ -9,6 +9,11 @@ import org.cloudbus.cloudsim.Host;
 import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.VmAllocationPolicy;
 
+/**
+*  This class represents the provisioning policy of edge hosts to virtual machines in a edge datacenter. It allocates hosts for placing VMs. 
+*
+* @author Gursharn Soni
+*/
 public class EdgeVmAllocationPolicy extends VmAllocationPolicy {
 
 	/** The map between each VM and its allocated host.

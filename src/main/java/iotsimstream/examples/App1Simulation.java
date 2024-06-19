@@ -115,37 +115,7 @@ public class App1Simulation {
                     }
                     //Create engine
                     GraphAppEngine engine = createGraphAppEngine(requestedSimulationTime);
-                    
-
-                  /*  //Add ;inks between engine and datacenters and fill engress bandwidth and latency maps between datacenters
-                    double engineBandwidth = Double.parseDouble(Properties.ENGINE_NETWORK_BANDWIDTH.getProperty()); //this bandwidth between engine and datacenters
-                    double engineLatency = Double.parseDouble(Properties.ENGINE_NETWORK_LATENCY.getProperty()); //this latency between engine and datacenters
-                    
-                    for(int i=0;i<listDatacenters.size();i++)
-                    {
-                        //Get datacenter    
-                        BigDatacenter datacenter=listDatacenters.get(i); 
-
-                        //Add link between engine and this datacenter with engine network bandwidth and latency
-                        NetworkTopology.addLink(engine.getId(),datacenter.getId(),engineBandwidth,engineLatency);
-
-                        int startingSimCount=2; //CloudSim starts counting for entity from 2, so the index of first datacenter is 2
-                        //Get egress bandwidth and latency of this datacenter with other datacenters (i.e egress network of this datacenter)
-                        double thisDatacenterEgressBw = Double.parseDouble(Properties.EXTERNAL_BANDWIDTH.getProperty(listDatacenters.get(i).getId()-startingSimCount)); //MBps //double bw = DSNetMatrix.getBandwidth(datacenterNumber, datacenterNumber);
-                        double thisDatacenterEgressLat = Double.parseDouble(Properties.EXTERNAL_LATENCY.getProperty(listDatacenters.get(i).getId()-startingSimCount)); //MBps //double bw = DSNetMatrix.getBandwidth(datacenterNumber, datacenterNumber);
-
-                        //Fill egress bandwidth map and latency maps of this datacenter with other datacenters
-                        for(int j=0;j<listDatacenters.size();j++)
-                        {
-                            if(i==j)
-                              continue;;
-
-                            BigDatacenter otherDatacenter=listDatacenters.get(j); 
-                            datacenter.getDestDatacenterEgressBwMap().put(otherDatacenter.getId(), thisDatacenterEgressBw);
-                            datacenter.getDestDatacenterEgressLatMap().put(otherDatacenter.getId(), thisDatacenterEgressLat);
-                        }
-                    }*/
-                    
+                               
                     double engineBandwidth = Double.parseDouble(Properties.ENGINE_NETWORK_BANDWIDTH.getProperty()); //this bandwidth between engine and datacenters
                     double engineLatency = Double.parseDouble(Properties.ENGINE_NETWORK_LATENCY.getProperty()); //this latency between engine and datacenters
                     int startingSimCount=2;  // CloudSim starts counting for entity from 2, so the index of first datacenter is 2
@@ -266,8 +236,6 @@ public class App1Simulation {
 		long creationVMDelay = Long.parseLong(EdgeProperties.EDGE_VM_DELAY.getProperty(edgeDatacenterNumber));
 		String offerName = EdgeProperties.VM_OFFERS.getProperty(edgeDatacenterNumber);
 		String type = EdgeProperties.EDGE_HOST_TYPE.getProperty(edgeDatacenterNumber);
-		Double schedulingInterval = Double
-				.parseDouble(EdgeProperties.EDGE_SCHEDULING_INTERVAL.getProperty(edgeDatacenterNumber));
 		Double locationX = Double.parseDouble(EdgeProperties.EDGE_HOST_LOCATION_X.getProperty(edgeDatacenterNumber));
 		Double locationY = Double.parseDouble(EdgeProperties.EDGE_HOST_LOCATION_Y.getProperty(edgeDatacenterNumber));
 		Double locationZ = Double.parseDouble(EdgeProperties.EDGE_HOST_LOCATION_Z.getProperty(edgeDatacenterNumber));

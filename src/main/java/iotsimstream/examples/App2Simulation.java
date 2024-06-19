@@ -239,8 +239,6 @@ public class App2Simulation {
 		long creationVMDelay = Long.parseLong(EdgeProperties.EDGE_VM_DELAY.getProperty(edgeDatacenterNumber));
 		String offerName = EdgeProperties.VM_OFFERS.getProperty(edgeDatacenterNumber);
 		String type = EdgeProperties.EDGE_HOST_TYPE.getProperty(edgeDatacenterNumber);
-		Double schedulingInterval = Double
-				.parseDouble(EdgeProperties.EDGE_SCHEDULING_INTERVAL.getProperty(edgeDatacenterNumber));
 		Double locationX = Double.parseDouble(EdgeProperties.EDGE_HOST_LOCATION_X.getProperty(edgeDatacenterNumber));
 		Double locationY = Double.parseDouble(EdgeProperties.EDGE_HOST_LOCATION_Y.getProperty(edgeDatacenterNumber));
 		Double locationZ = Double.parseDouble(EdgeProperties.EDGE_HOST_LOCATION_Z.getProperty(edgeDatacenterNumber));

@@ -2,6 +2,12 @@ package iotsimstream.vmOffers;
 
 import java.util.LinkedHashMap;
 
+/**
+ * This class provide different VM options offered by a particular Edge provider
+ *
+ * @author Gursharn Soni
+ */
+
 import org.cloudbus.cloudsim.Vm;
 
 import iotsimstream.Properties;
@@ -21,7 +27,6 @@ public class VMOffersEdgeDataCenter1  extends VMOffers{
                     vmOffersTable.put(new Vm(1,0, baseMips,4,  8192,vmBw,  18432,"",null), (double)  ((0.8*100)/3600)); //Medium
                     vmOffersTable.put(new Vm(2,0, baseMips,8,  16384,vmBw,  34816,"",null), (double)  ((1.6*100)/3600)); //Large
                     vmOffersTable.put(new Vm(3,0, baseMips,16,  32000,vmBw,  69632,"",null), (double)  ((3.2*100)/3600)); //XLarge
-                    //vmOffersTable.put(new Vm(3,0,4*baseMips,1,baseMem,0,baseStorage,"",null), baseCost);
                 }
                 
 		return vmOffersTable;
@@ -48,4 +53,5 @@ public class VMOffersEdgeDataCenter1  extends VMOffers{
 	public long getBootTime() {
 		return Long.parseLong(Properties.VM_DELAY.getProperty());
 	}
+
 }

@@ -4,6 +4,11 @@ import org.cloudbus.cloudsim.CloudletScheduler;
 
 import iotsimstream.SVM;
 
+/**
+* This class represents virtual machine that runs inside the edge device
+*
+* @author Gursharn Soni
+*/
 public class EdgeSVM extends SVM {
 
 	// type could be "filtering" or "statistics"

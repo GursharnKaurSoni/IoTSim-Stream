@@ -8,6 +8,12 @@ import org.cloudbus.cloudsim.VmScheduler;
 import org.cloudbus.cloudsim.provisioners.BwProvisioner;
 import org.cloudbus.cloudsim.provisioners.RamProvisioner;
 
+/**
+ * A EdgeHost is edge computing node or edge servers use for computing resources located closer to the data source or end-user
+ *
+ * @author Gursharn Soni
+ */
+
 public class EdgeHost extends Host{
 	
 	/**

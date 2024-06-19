@@ -2,6 +2,11 @@ package iotsimstream.edge;
 
 import iotsimstream.IotDevice;
 
+/**
+ * This class extends Iot Device and specifies the type of IoT device it represents.
+ * 
+ * @author Gursharn Kaur
+ */
 public class AVSensor extends IotDevice {
 
 	private String networkType;

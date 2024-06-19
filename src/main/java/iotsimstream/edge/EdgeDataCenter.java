@@ -1,9 +1,7 @@
 package iotsimstream.edge;
 
-import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -12,16 +10,13 @@ import org.cloudbus.cloudsim.Datacenter;
 import org.cloudbus.cloudsim.DatacenterCharacteristics;
 import org.cloudbus.cloudsim.Host;
 import org.cloudbus.cloudsim.Log;
-import org.cloudbus.cloudsim.Storage;
 import org.cloudbus.cloudsim.Vm;
-import org.cloudbus.cloudsim.VmAllocationPolicy;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEvent;
 
 import iotsimstream.Channel;
 import iotsimstream.GraphAppEngine;
-import iotsimstream.SVM;
 import iotsimstream.ServiceCloudlet;
 import iotsimstream.ServiceCloudletSchedulerSpaceShared;
 import iotsimstream.Stream;
@@ -32,10 +27,11 @@ import iotsimstream.vmOffers.VMOffers;
 
 
 /**
- * This class extends data center to support simulation
- * of stream graph application including internal and external data
- * transfer delays if data has to be moved between VMs in datacenter
+ * This class extends datacenter to support simulation of stream graph application including internal and external data
+ * transfer delays if data has to be moved between VMs in edgedatacenter
  * or to VM in another datacenter.
+ * 
+ * @author Gursharn Soni
  */
 public class EdgeDataCenter extends Datacenter {
 	
@@ -150,10 +146,6 @@ public class EdgeDataCenter extends Datacenter {
 	protected void processVmDestroy(SimEvent ev, boolean ack) {
 		//do last accounting for the vm
 		EdgeSVM edgeSVM = (EdgeSVM) ev.getData();
-		long startTime = vmCreationTime.remove(edgeSVM);
-		double price = vmPrice.remove(edgeSVM);
-		//long useInHours = updateVmUsage(startTime,price);
-                
 		super.processVmDestroy(ev, ack);
 	}
 						
@@ -190,8 +182,6 @@ public class EdgeDataCenter extends Datacenter {
 			Log.printLine(getName() + ".processCloudletSubmit(): " + "Exception error.");
 			e.printStackTrace();
 		}
-
-		//checkCloudletCompletion();
 	}
 		
 	@Override
@@ -208,9 +198,7 @@ public class EdgeDataCenter extends Datacenter {
                     if (smallerTime < Double.MAX_VALUE) {
                             double delay = smallerTime-CloudSim.clock();
                             if (delay<QUANTUM) delay=QUANTUM;
-                            //delay=QUANTUM;
-                            //JOptionPane.showMessageDialog(null, smallerTime + "\n" + CloudSim.clock());
-                            schedule(getId(), delay, CloudSimTags.VM_DATACENTER_EVENT);
+                               schedule(getId(), delay, CloudSimTags.VM_DATACENTER_EVENT);
                     } 
 
                     setLastProcessTime(CloudSim.clock());
@@ -242,15 +230,12 @@ public class EdgeDataCenter extends Datacenter {
                                 {
                                     int desVMID=streamPortionVMIdMap.get(streamPortion);
                                     int destDatacenterid = StreamSchedulingOnSVMs.getDatacenterID(desVMID);
-                                    //Stream streamPortion=vmStreamPortionMap.get(desVMID); //stream portion
                                     TransferStreamEvent event = new TransferStreamEvent(streamPortion , getId(), edgeSVM.getId(), destDatacenterid , desVMID);
-                                    //JOptionPane.showMessageDialog(null, s.id +  "" + destDatacenterID + " " + destinationVMID);
-                                    //JOptionPane.showMessageDialog(null, streamPortion.getId() +  "\n" + streamPortion.getPortionID() + "\n" + CloudSim.clock());
                                     sendNow(getId(),TRANSFER_STREAM,event);
                                 }
                             }
                             else
-                                Log.printLine("Dequeue stream from OutputQueue of SVM #"  + edgeSVM.getId() + " is failied");
+                                Log.printLine("Dequeue stream from OutputQueue of  Edge SVM #"  + edgeSVM.getId() + " is failied");
                         }
                     }
                 }
@@ -263,8 +248,7 @@ public class EdgeDataCenter extends Datacenter {
                 
                 //Update engress channel
                 for(Channel channel: destDatacenterChannelTable.values()){
-                        //JOptionPane.showMessageDialog(null, "Egress");
-			//updates each channel
+          	//updates each channel
 			if (CloudSim.clock() > channel.getLastUpdateTime()+QUANTUM) {
 				double nextEvent = channel.updateTransmission(CloudSim.clock());
 				if (nextEvent<smallerEvent) {
@@ -328,7 +312,7 @@ public class EdgeDataCenter extends Datacenter {
 		
 		//check if VMs are cohosted
 		boolean cohosted=true;
-                if(sourceDatacenterId!=destinationDatacenterId) // transfer stream between different datacenters
+                if(sourceDatacenterId!=destinationDatacenterId) // transfer stream between different cloud and edge  datacenters 
                 {
                     createChannel(sourceDatacenterId, sourceVMId, destinationDatacenterId);
                     cohosted=false;
@@ -359,25 +343,21 @@ public class EdgeDataCenter extends Datacenter {
 	private void processStreamAvailable(SimEvent ev) {
 		
                 StreamTransmission tr=(StreamTransmission) ev.getData();
-                
-                int owner = tr.getstream().getOwnerId();
-
                 List<EdgeSVM> svms=getVmList();
                 EdgeSVM svm=null;
                 for(int i=0;i<svms.size();i++)
                     if(svms.get(i).getId()==tr.getDestinationVMId())
                         svm=svms.get(i);
 
-                 //= (SVM) getVmList().get(tr.getDestinationVMId());
-                if(svm!=null)
+               if(svm!=null)
                 {
                     svm.addStreamToInputQueue(tr.getstream());
 
                     //Using canonicalID
                     if(tr.getstream().isPortion())
-                        Log.printLine(CloudSim.clock()+": Stream #"+tr.getstream().getId()+" Portion#" + tr.getstream().getPortionID() + " is now available at VM #"+tr.getDestinationVMId() + " in Datacenter #" + GraphAppEngine.getCanonicalIDForDataCenter(tr.getDestinationDatacenterId()) + " --- Sent by VM #"  +tr.getSourceVMId() + " in Datacenter #" + GraphAppEngine.getCanonicalIDForDataCenter(tr.getSourceDatacenterId()));
+                        Log.printLine(CloudSim.clock()+": Stream #"+tr.getstream().getId()+" Portion#" + tr.getstream().getPortionID() + " is now available at VM #"+tr.getDestinationVMId() + " in Edge Datacenter #" + GraphAppEngine.getCanonicalIDForDataCenter(tr.getDestinationDatacenterId()) + " --- Sent by VM #"  +tr.getSourceVMId() + " in Edge Datacenter #" + GraphAppEngine.getCanonicalIDForDataCenter(tr.getSourceDatacenterId()));
                     else
-                        Log.printLine(CloudSim.clock()+": Stream #"+tr.getstream().getId()+" is now available at VM #"+tr.getDestinationVMId() + " in Datacenter #" + GraphAppEngine.getCanonicalIDForDataCenter(tr.getDestinationDatacenterId()) + " --- Sent by VM #"  +tr.getSourceVMId() + " in Datacenter #" + GraphAppEngine.getCanonicalIDForDataCenter(tr.getSourceDatacenterId()));
+                        Log.printLine(CloudSim.clock()+": Stream #"+tr.getstream().getId()+" is now available at VM #"+tr.getDestinationVMId() + " in Edge Datacenter #" + GraphAppEngine.getCanonicalIDForDataCenter(tr.getDestinationDatacenterId()) + " --- Sent by VM #"  +tr.getSourceVMId() + " in Edge Datacenter #" + GraphAppEngine.getCanonicalIDForDataCenter(tr.getSourceDatacenterId()));
 
                     //To put stream coming in corssponding VM (i.e. calling processingCloudlet method)
                     sendNow(getId(),CloudSimTags.VM_DATACENTER_EVENT);
@@ -391,10 +371,10 @@ public class EdgeDataCenter extends Datacenter {
 			//vms are in the same host; Just add a small latency
 			schedule(sourceDatacenterId,cohostedLatency,STREAM_AVAILABLE,transmission);
 		} else {
-                        //vms are not cohosed, which means that they may be in the same datacenter at different host, or may be at different datacenterse 
+                        //vms are not cohosed, which means that they may be in the same datacenter at different host, or may be at different datacenters
 
 			double transmissionDelay = getChannel(sourceDatacenterId, sourceVMid, destinationDatacenterId, destinationVMId).addTransmission(transmission);
-                        //JOptionPane.showMessageDialog(null, transmissionDelay);
+                      
                         if(sourceDatacenterId == destinationDatacenterId) //transmission within the same datacenter
                         {
                             if (transmissionDelay>=QUANTUM){
@@ -465,7 +445,6 @@ public class EdgeDataCenter extends Datacenter {
 	}
 	
 	private double getPrice(EdgeSVM vm) {
-		LinkedHashMap<Vm,Double> vmOffersTable = vmOffers.getVmOffers();
 		double cost=0.0;
 		
                 cost=vmOffers.getCost(vm.getMips(), vm.getNumberOfPes(),vm.getRam(), vm.getBw());
@@ -475,11 +454,8 @@ public class EdgeDataCenter extends Datacenter {
 		
 	//Simulation output
 	public void printSummary(){
-		DecimalFormat df = new DecimalFormat("#.##");
 		Log.printLine();
-		Log.printLine("======== DATACENTER #"+  GraphAppEngine.getCanonicalIDForDataCenter(getId()) +" SUMMARY ========");
-                //Log.printLine("======== DATACENTER #"+  StreamSchedulingOnVMs.getIncrementialDataCenterID(getId()) +" SUMMARY ========");
-		//Log.printLine("= Cost: $"+df.format(cost));
+		Log.printLine("======== EDGE DATACENTER #"+  GraphAppEngine.getCanonicalIDForDataCenter(getId()) +" SUMMARY ========");
 		Log.printLine("========== END OF SUMMARY =========");
 	}
 

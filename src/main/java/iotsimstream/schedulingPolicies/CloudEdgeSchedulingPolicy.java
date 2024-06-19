@@ -1,16 +1,5 @@
 package iotsimstream.schedulingPolicies;
 
-import iotsimstream.ProvisionedSVm;
-import iotsimstream.SVM;
-import iotsimstream.Service;
-import iotsimstream.ServiceCloudlet;
-import iotsimstream.ServiceCloudletSchedulerSpaceShared;
-import iotsimstream.Stream;
-import iotsimstream.edge.EdgeSVM;
-import iotsimstream.schedulingPolicies.Policy;
-import iotsimstream.vmOffers.VMOffers;
-import iotsimstream.vmOffers.VMOffersEdgeDataCenter1;
-
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -18,10 +7,27 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+
 import javax.swing.JOptionPane;
+
 import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.UtilizationModelFull;
 import org.cloudbus.cloudsim.Vm;
+
+import iotsimstream.ProvisionedSVm;
+import iotsimstream.SVM;
+import iotsimstream.Service;
+import iotsimstream.ServiceCloudlet;
+import iotsimstream.ServiceCloudletSchedulerSpaceShared;
+import iotsimstream.Stream;
+import iotsimstream.edge.EdgeSVM;
+import iotsimstream.vmOffers.VMOffers;
+
+/**
+ * This class implements a scheduling policy that first randomly selects a datacenter, and then randomly chooses a VM offering provided by the selected datacenter.
+ *
+ * @author Gursharn Kaur
+ */
 
 public class CloudEdgeSchedulingPolicy extends Policy {
 
@@ -102,20 +108,19 @@ public class CloudEdgeSchedulingPolicy extends Policy {
 				JOptionPane.showMessageDialog(null,
 						"IoTSim-Stream will be terminated because provisioning VM(s) for Service " + serviceID
 								+ " is not possible with available VM offer(s)\n"
-								+ "Reason: there is no VM offer in selected cloud-based datacenter that achieves the required MIPS for processing one stream unit (i.e. "
+								+ "Reason: there is no VM offer in selected cloud-edge based datacenter that achieves the required MIPS for processing one stream unit (i.e. "
 								+ (minDPUnit * service.getDataProcessingReq()) + " MIPS)");
 				Log.print("IoTSim-Stream is terminated because provisioning VM(s) for Service " + serviceID
 						+ " is not possible with available VM offer(s)\nReason: "
-						+ "there is no VM offer in selected cloud-based datacenter that achieves the required MIPS for processing one stream unit (i.e. "
+						+ "there is no VM offer in selected cloud-edge based  datacenter that achieves the required MIPS for processing one stream unit (i.e. "
 						+ (minDPUnit * service.getDataProcessingReq()) + " MIPS)");
 				System.out.println("IoTSim-Stream is terminated because provisioning VM(s) for Service " + serviceID
 						+ " is not possible with available VM offer(s)\nReason: "
-						+ "there is no VM offer in selected cloud-based datacenter that achieves the required MIPS for processing one stream unit (i.e. "
+						+ "there is no VM offer in selected cloud-edge based datacenter that achieves the required MIPS for processing one stream unit (i.e. "
 						+ (minDPUnit * service.getDataProcessingReq()) + " MIPS)");
 				System.exit(0);
 			}
-			//JOptionPane.showMessageDialog(null, serviceID+" "+selectedVMs);
-			
+		
 
 			ServiceVMsMap.put(serviceID, selectedVMs);
 		}
@@ -133,33 +138,19 @@ public class CloudEdgeSchedulingPolicy extends Policy {
 				Vm instance = datacentersWithVMOffers.get(placementDatacenterID).getVM(vmid);
 				double vmCost = datacentersWithVMOffers.get(placementDatacenterID).getVmOffers().get(instance);
 				vmOffers = datacentersWithVMOffers.get(placementDatacenterID);
-				if(vmOffers.getClass().toString().contains("Edge")) {
-	    		EdgeSVM newVm = new EdgeSVM("RasberryPI", vmId, ownerId, instance.getMips(), instance.getNumberOfPes(),
-						instance.getRam(), instance.getBw(), instance.getSize(), "",
-						new ServiceCloudletSchedulerSpaceShared());
-				provisioningInfo.add(new ProvisionedSVm(newVm, 0, 0, vmCost, placementDatacenterID));
-				ServiceCloudlet cl = new ServiceCloudlet(cloudletCont, 1, newVm.getNumberOfPes(), 0, 0,
-						new UtilizationModelFull(), new UtilizationModelFull(), new UtilizationModelFull(), serviceSize,
-						ownerId, serviceID);
-				cl.setVmId(newVm.getId());
-				service.addCloudlet(cl);
-				vmidList.add(newVm.getId());
-				cloudletCont++;
-				vmId++;
-				}else {
-					 SVM newVm = new SVM(vmId,ownerId,instance.getMips(),instance.getNumberOfPes(),instance.getRam(),instance.getBw(),instance.getSize(),"", new ServiceCloudletSchedulerSpaceShared());
-                     provisioningInfo.add(new ProvisionedSVm(newVm,0,0,vmCost,placementDatacenterID));
-                     ServiceCloudlet cl = new ServiceCloudlet(cloudletCont, 1, newVm.getNumberOfPes(), 0, 0,
-     						new UtilizationModelFull(), new UtilizationModelFull(), new UtilizationModelFull(), serviceSize,
-     						ownerId, serviceID);
-     				cl.setVmId(newVm.getId());
-     				service.addCloudlet(cl);
-     				vmidList.add(newVm.getId());
-     				cloudletCont++;
-     				vmId++;
-                     
+				if (vmOffers.getClass().toString().contains("Edge")) {
+					EdgeSVM edgeSVM = new EdgeSVM("RasberryPI", vmId, ownerId, instance.getMips(),
+							instance.getNumberOfPes(), instance.getRam(), instance.getBw(), instance.getSize(),
+							"", new ServiceCloudletSchedulerSpaceShared());
+					provisionAndAddCloudlet(edgeSVM, vmCost, placementDatacenterID, serviceSize, ownerId,
+							serviceID, service, vmidList);
+				} else {
+					SVM svm = new SVM(vmId, ownerId, instance.getMips(), instance.getNumberOfPes(),
+							instance.getRam(), instance.getBw(), instance.getSize(), "",
+							new ServiceCloudletSchedulerSpaceShared());
+					provisionAndAddCloudlet(svm, vmCost, placementDatacenterID, serviceSize, ownerId, serviceID,
+							service, vmidList);
 				}
-
 				
 			}
 
@@ -185,4 +176,18 @@ public class CloudEdgeSchedulingPolicy extends Policy {
 			}
 		}
 	}
+	
+
+	
+	private void provisionAndAddCloudlet(SVM svm, double vmCost, int placementDatacenterID, Double serviceSize, int ownerId, int serviceID, Service service, ArrayList<Integer> vmidList) {
+		provisioningInfo.add(new ProvisionedSVm(svm, 0, 0, vmCost, placementDatacenterID));
+		ServiceCloudlet cl = new ServiceCloudlet(cloudletCont, 1, svm.getNumberOfPes(), 0, 0,
+				new UtilizationModelFull(), new UtilizationModelFull(), new UtilizationModelFull(),
+				serviceSize, ownerId, serviceID);
+		cl.setVmId(svm.getId());
+		service.addCloudlet(cl);
+		vmidList.add(svm.getId());
+		cloudletCont++;
+		vmId++;
+}
 }
