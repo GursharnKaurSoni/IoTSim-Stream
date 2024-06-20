@@ -5,6 +5,11 @@ import iotsimstream.edge.CommonCommuniProtocol;
 import iotsimstream.edge.QoS;
 import iotsimstream.edge.Synchronism;
 
+/**
+ * Session Initiation Protocol (SIP) is signaling protocol used for initiating, maintaining, modifying, and terminating real-time
+ * sessions that involve video,voice, messaging and other communications application
+ * @author  Gursharn Soni
+ */
 public class SIPProtocol extends CommonCommuniProtocol {
 	private static final float TRANSIMISON_SPEED = 1.00f;
 

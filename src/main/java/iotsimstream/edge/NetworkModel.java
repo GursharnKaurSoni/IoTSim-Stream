@@ -1,7 +1,10 @@
 package iotsimstream.edge;
 
 /**
- * This model is like a network card in which it can specify network Type like  wifi, 3G, 4G and communicationProtocol
+ * this model is like a network card in which it can specify network Type like wifi, 3G, 4G
+ *  and communicationProtocol
+ * @author cody
+ *
  */
 public class NetworkModel {
 

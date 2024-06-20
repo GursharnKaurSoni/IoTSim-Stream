@@ -3,7 +3,9 @@ package iotsimstream.network.protocol;
 import iotsimstream.edge.CommunicationProtocol;
 import iotsimstream.edge.NetworkModel;
 import iotsimstream.edge.NetworkType;
-
+ /**
+  * * <p> Modified by: Gursharn Soni </p>
+  */
 public class SimpleNetworkDelayCalculator implements NetworkDelayCalculationPolicy {
 
 	@Override

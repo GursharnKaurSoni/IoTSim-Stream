@@ -19,6 +19,7 @@ import iotsimstream.network.protocol.XMPPProtocol;
 /**
  *
  * @author Mutaz Barika
+ * <p> Modified by: Gursharn Soni </p>
  */
 public class IotDevice extends SimEntity {
 
