@@ -1,9 +1,6 @@
 package iotsimstream;
-import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -13,6 +10,7 @@ import java.util.logging.Logger;
  * name of the properties file is defined. Moreover, when
  * properties are to be read, this is the class that is called.
  *
+ * <p> Modified by: Gursharn Soni </p>
  */
 public enum Configuration {
 	

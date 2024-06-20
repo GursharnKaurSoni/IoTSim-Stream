@@ -12,6 +12,7 @@ package iotsimstream;
  *    Properties.NAME.getProperty();
  * 4. make the appropriated conversion to the desirable type.
  * 
+ * <p> Modified by: Gursharn Soni </p>
  */
 
 public enum Properties {
