@@ -25,5 +25,13 @@ public enum QoS {
      *  no information is found
      * 
      */
-    UNKNOWN
+    UNKNOWN,
+    /**
+     * Some loss of messages is acceptable as long as the majority are delivered.
+     */
+    LOSS_TOLERANT,
+    /**
+    * Guarantees delivery with redundancy to ensure messages are received even in the presence of network failures.
+    */
+   HIGH_RELIABILITY
 }

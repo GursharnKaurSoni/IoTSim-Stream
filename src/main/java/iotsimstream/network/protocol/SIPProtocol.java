@@ -18,7 +18,7 @@ public class SIPProtocol extends CommonCommuniProtocol {
 		super(443, new TransportProtocol[] { TransportProtocol.TCP, TransportProtocol.UDP, TransportProtocol.SCTP },
 				new SecurityProtocol[] { SecurityProtocol.TLS, SecurityProtocol.SRTP }, 0, Integer.MAX_VALUE,
 				new Architecture[] { Architecture.REQ_RSP }, "utf-8", "https",
-				new Synchronism[] { Synchronism.ASYN, Synchronism.SYN }, new QoS[] { QoS.AMO, QoS.EO, QoS.ALO },
+				new Synchronism[] { Synchronism.ASYN, Synchronism.SYN }, new QoS[] { QoS.AMO, QoS.EO, QoS.HIGH_RELIABILITY },
 				TRANSIMISON_SPEED);
 
 	}

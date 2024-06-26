@@ -9,8 +9,9 @@ import org.cloudbus.cloudsim.core.SimEvent;
 
 import iotsimstream.edge.CommunicationProtocol;
 import iotsimstream.edge.EdgeDataCenter;
-import iotsimstream.edge.IoTType;
+import iotsimstream.edge.IotType;
 import iotsimstream.edge.NetworkType;
+import iotsimstream.network.protocol.MessageSessionRelayProtocol;
 import iotsimstream.network.protocol.NetworkDelayCalculationPolicy;
 import iotsimstream.network.protocol.SIPProtocol;
 import iotsimstream.network.protocol.SimpleNetworkDelayCalculator;
@@ -35,7 +36,7 @@ public class IotDevice extends SimEntity {
 
     
     
-	public IotDevice(IoTType type, String name, int streamid, int ownerId, double datarate, String networkType,
+	public IotDevice(IotType type, String name, int streamid, int ownerId, double datarate, String networkType,
 			String communicationProtocol) {
 		super(name);
 		this.datarate = datarate;
@@ -87,6 +88,9 @@ public class IotDevice extends SimEntity {
 			break;
 		case "sip":
 			commnProtocol = new SIPProtocol();
+			break;
+		case "msrp":
+			commnProtocol = new MessageSessionRelayProtocol();
 			break;
 		default:
 			System.out.println(communicationProtocol + " protocol has not been supported yet!");

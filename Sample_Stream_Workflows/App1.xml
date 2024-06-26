@@ -2,7 +2,8 @@
 <!-- part 1: list of all referenced files (may be empty) -->
 <!-- part 2: definition of all jobs (at least one) -->
   <iotsources>
-	  <iotsource datarate="3" id="PID00000" name="Producer0" type="stream" iotclass="iotsimstream.edge.AVSensor" iottype="car"  communicationprotocol="xmpp" networktype="bluetooth"/>
+	  <iotsource datarate="3" id="PID00000" name="Producer0" type="stream" 
+	  iotclass="iotsimstream.edge.AVSensor" iottype="car"  communicationprotocol="xmpp" networktype="bluetooth"/>
   </iotsources>
   <service dataprocessingreq="500" id="ID00000" name="TmpltBank" userreq="4">
     <uses link="input" producerref="PID00000" type="stream"/>

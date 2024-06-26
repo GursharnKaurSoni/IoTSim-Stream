@@ -5,7 +5,7 @@ package iotsimstream.edge;
 *
 * @author Gursharn Soni
 */
-public enum IoTType {
+public enum IotType {
 	
 	CAR_SENSOR
 

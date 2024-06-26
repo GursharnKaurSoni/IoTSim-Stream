@@ -29,7 +29,7 @@ public enum EdgeProperties {
 	EDGE_EXTERNAL_BANDWIDTH("edge.external.bandwidth"),
 	EDGE_EXTERNAL_LATENCY("edge.external.latency"),
 	VM_OFFERS("edge.vm.offers"),
-
+	EDGE_DATACENTER("edge.datacenter")
 	;
 
 	private String key;

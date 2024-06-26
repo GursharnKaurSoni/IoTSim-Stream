@@ -72,8 +72,8 @@ public class App2Simulation {
 					if (Properties.DATACENTERS.getKey().contains("cloud")) {
 						NumOfDatacenters = Integer.parseInt(Properties.DATACENTERS.getProperty());
      				}
-                    if(Properties.EDGE_DATACENTER.getKey().contains("edge")) {
-                    	NumOfEdgeDatacenters = Integer.parseInt(Properties.EDGE_DATACENTER.getProperty());
+                    if(EdgeProperties.EDGE_DATACENTER.getKey().contains("edge")) {
+                    	NumOfEdgeDatacenters = Integer.parseInt(EdgeProperties.EDGE_DATACENTER.getProperty());
                    }
                     
                     //Print simulation configuration
