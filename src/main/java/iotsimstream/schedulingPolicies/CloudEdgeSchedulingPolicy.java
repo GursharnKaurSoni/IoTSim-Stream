@@ -88,6 +88,9 @@ public class CloudEdgeSchedulingPolicy extends Policy {
 					Vm randomVm = vms.get(randomIndex);
 					double vmMIPS = randomVm.getMips() * randomVm.getNumberOfPes();
 
+					 if(vmMIPS/service.getDataProcessingReq()< minDPUnit)
+                         continue;
+					 
 					if (vmMIPS >= requiredMIPS) {
 						toProvisionVM = true;
 					}

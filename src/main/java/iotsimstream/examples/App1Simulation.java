@@ -23,7 +23,7 @@ import org.cloudbus.cloudsim.provisioners.RamProvisionerSimple;
 import iotsimstream.BigDatacenter;
 import iotsimstream.GraphAppEngine;
 import iotsimstream.Properties;
-import iotsimstream.edge.EdgeDataCenter;
+import iotsimstream.edge.EdgeDatacenter;
 import iotsimstream.edge.EdgeHost;
 import iotsimstream.edge.EdgeProperties;
 import iotsimstream.edge.EdgeVmAllocationPolicy;
@@ -97,7 +97,7 @@ public class App1Simulation {
 
 
                     ArrayList<BigDatacenter> listDatacenters=new ArrayList<BigDatacenter>();
-                    ArrayList<EdgeDataCenter> listEdgeDatacenters=new ArrayList<EdgeDataCenter>();
+                    ArrayList<EdgeDatacenter> listEdgeDatacenters=new ArrayList<EdgeDatacenter>();
                     ArrayList<Datacenter> totalDataCenter= new ArrayList<Datacenter>();
                     
                     long seedVmDelay= 1040529;
@@ -109,7 +109,7 @@ public class App1Simulation {
                     }
                     for(int i=0;i<NumOfEdgeDatacenters;i++)
                     {
-                        EdgeDataCenter edgedatacenter = createEdgeDatacenter(i, "EdgeDatacenter" + i, seedVmDelay);
+                        EdgeDatacenter edgedatacenter = createEdgeDatacenter(i, "EdgeDatacenter" + i, seedVmDelay);
                         listEdgeDatacenters.add(edgedatacenter);
                         totalDataCenter.add(edgedatacenter);
                     }
@@ -125,7 +125,7 @@ public class App1Simulation {
                     {
                         //Get datacenter    
                     	if(totalDataCenter.get(i).getName().contains("Edge")) {
-                    		EdgeDataCenter datacenter=(EdgeDataCenter)totalDataCenter.get(i);
+                    		EdgeDatacenter datacenter=(EdgeDatacenter)totalDataCenter.get(i);
                     		
                     		//Add link between engine and this datacenter with engine network bandwidth and latency
                             NetworkTopology.addLink(engine.getId(),datacenter.getId(),engineBandwidth,engineLatency);
@@ -223,7 +223,7 @@ public class App1Simulation {
             return new BigDatacenter(name,characteristics,new VmAllocationPolicySimple(hostList),bw,latency,mips,creationVMDelay,offers,seedVmDelayGenerator);
     }
     
-    private static EdgeDataCenter createEdgeDatacenter(int edgeDatacenterNumber, String name, long seedVmDelayGenerator)
+    private static EdgeDatacenter createEdgeDatacenter(int edgeDatacenterNumber, String name, long seedVmDelayGenerator)
 			throws Exception {
 
 		int hosts = Integer.parseInt(EdgeProperties.EDGE_HOST.getProperty(edgeDatacenterNumber));
@@ -265,7 +265,7 @@ public class App1Simulation {
 		DatacenterCharacteristics characteristics = new DatacenterCharacteristics("x86", "Linux", "Xen", hostList, 10.0,
 				0.0, 0.05, 0.001, 0.00);
 
-		return new EdgeDataCenter(name, characteristics, new EdgeVmAllocationPolicy(hostList), bw, latency, mips,
+		return new EdgeDatacenter(name, characteristics, new EdgeVmAllocationPolicy(hostList), bw, latency, mips,
 				creationVMDelay, offers, seedVmDelayGenerator);
 	}
 

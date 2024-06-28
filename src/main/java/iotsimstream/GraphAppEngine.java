@@ -1,7 +1,7 @@
 package iotsimstream;
 
 import iotsimstream.vmOffers.VMOffers;
-import iotsimstream.edge.EdgeDataCenter;
+import iotsimstream.edge.EdgeDatacenter;
 import iotsimstream.schedulingPolicies.Policy;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -216,7 +216,7 @@ public class GraphAppEngine extends SimEntity{
 				Integer datacenterID = entry.getKey();
 				String dataCenterName = entry.getValue();
 				if (dataCenterName.contains("Edge")) {
-					EdgeDataCenter datacenter = (EdgeDataCenter) CloudSim.getEntity(datacenterID);
+					EdgeDatacenter datacenter = (EdgeDatacenter) CloudSim.getEntity(datacenterID);
 					datacenterWithVMOffers.put(datacenterID, datacenter.vmOffers);
 					datacenter.vmOffers.getVmOffers();
 				} else {
@@ -271,7 +271,7 @@ public class GraphAppEngine extends SimEntity{
 
 		for (Integer resid : CloudSim.getCloudResourceList()) {
 			if (CloudSim.getEntity(resid).getName().contains("Edge")) {
-				EdgeDataCenter datacenter = (EdgeDataCenter) CloudSim.getEntity(resid);
+				EdgeDatacenter datacenter = (EdgeDatacenter) CloudSim.getEntity(resid);
 				datacenterInitializeMap.put(datacenter.getId(), Boolean.FALSE);
 				sendNow(datacenter.getId(), CloudSimTags.RESOURCE_CHARACTERISTICS, getId());
 			} else {
@@ -410,6 +410,7 @@ public class GraphAppEngine extends SimEntity{
             endTime =  CloudSim.clock();
             
             totalProcessedStreams=totalOfProcessedStreams;
+            CloudSim.terminateSimulation();
         }
         
         public static double getMinDPUnit()

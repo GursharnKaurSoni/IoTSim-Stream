@@ -33,7 +33,7 @@ import iotsimstream.vmOffers.VMOffers;
  * 
  * @author Gursharn Soni
  */
-public class EdgeDataCenter extends Datacenter {
+public class EdgeDatacenter extends Datacenter {
 	
 	public static final int UPDATE_NETWORK = 455671;
 	public static final int TRANSFER_STREAM = 455672;
@@ -61,7 +61,7 @@ public class EdgeDataCenter extends Datacenter {
 	private EdgeVmAllocationPolicy edgeVmAllocationPolicy;
         
         
-	public EdgeDataCenter(String name, DatacenterCharacteristics characteristics, EdgeVmAllocationPolicy vmAllocationPolicy,
+	public EdgeDatacenter(String name, DatacenterCharacteristics characteristics, EdgeVmAllocationPolicy vmAllocationPolicy,
 			double ingressBandwidth, double ingressLatency, int basicCpuUnit, long averageCreationDelay, VMOffers vmOffers, long seed) throws Exception {
 		super(name,characteristics,vmAllocationPolicy,null,0);
 		

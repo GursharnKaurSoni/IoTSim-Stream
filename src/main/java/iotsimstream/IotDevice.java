@@ -8,7 +8,7 @@ import org.cloudbus.cloudsim.core.SimEntity;
 import org.cloudbus.cloudsim.core.SimEvent;
 
 import iotsimstream.edge.CommunicationProtocol;
-import iotsimstream.edge.EdgeDataCenter;
+import iotsimstream.edge.EdgeDatacenter;
 import iotsimstream.edge.IotType;
 import iotsimstream.edge.NetworkType;
 import iotsimstream.network.protocol.MessageSessionRelayProtocol;
@@ -153,7 +153,7 @@ public class IotDevice extends SimEntity {
                 data[1]=streamPortion; //stream portion
                 
                 //Send stream portion now
-                send(datacenterid,getNetworkDelay(networkType, communicationProtocol),EdgeDataCenter.EXSOURCE_STREAM, data);
+                send(datacenterid,getNetworkDelay(networkType, communicationProtocol),EdgeDatacenter.EXSOURCE_STREAM, data);
             }
             
             //Schedule next send
