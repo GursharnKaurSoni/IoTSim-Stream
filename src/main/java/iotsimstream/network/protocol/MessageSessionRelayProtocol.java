@@ -15,10 +15,10 @@ public class MessageSessionRelayProtocol extends CommonCommuniProtocol {
 
 	public MessageSessionRelayProtocol() {
 
-		super(443, new TransportProtocol[] { TransportProtocol.TCP, TransportProtocol.UDP, TransportProtocol.SCTP },
-				new SecurityProtocol[] { SecurityProtocol.TLS, SecurityProtocol.SRTP }, 0, Integer.MAX_VALUE,
+		super(443, new TransportProtocol[] { TransportProtocol.TCP},
+				new SecurityProtocol[] { SecurityProtocol.TLS }, 0, Integer.MAX_VALUE,
 				new Architecture[] { Architecture.REQ_RSP }, "utf-8", "https",
-				new Synchronism[] { Synchronism.ASYN, Synchronism.SYN }, new QoS[] { QoS.AMO, QoS.EO, QoS.LOSS_TOLERANT },
+				new Synchronism[] { Synchronism.ASYN, Synchronism.SYN }, new QoS[] { QoS.ALO, QoS.HIGH_RELIABILITY },
 				TRANSIMISON_SPEED);
 
 	}

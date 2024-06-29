@@ -15,10 +15,10 @@ public class SIPProtocol extends CommonCommuniProtocol {
 
 	public SIPProtocol() {
 
-		super(443, new TransportProtocol[] { TransportProtocol.TCP, TransportProtocol.UDP, TransportProtocol.SCTP },
+		super(443, new TransportProtocol[] { TransportProtocol.TCP, TransportProtocol.UDP },
 				new SecurityProtocol[] { SecurityProtocol.TLS, SecurityProtocol.SRTP }, 0, Integer.MAX_VALUE,
-				new Architecture[] { Architecture.REQ_RSP }, "utf-8", "https",
-				new Synchronism[] { Synchronism.ASYN, Synchronism.SYN }, new QoS[] { QoS.AMO, QoS.EO, QoS.HIGH_RELIABILITY },
+				new Architecture[] { Architecture.REQ_RSP , Architecture.PUB_SUB}, "utf-8", "https",
+				new Synchronism[] { Synchronism.ASYN, Synchronism.SYN }, new QoS[] { QoS.ALO, QoS.EO, QoS.HIGH_RELIABILITY, QoS.LOSS_TOLERANT },
 				TRANSIMISON_SPEED);
 
 	}
