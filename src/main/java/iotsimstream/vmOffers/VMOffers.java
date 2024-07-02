@@ -39,6 +39,11 @@ public abstract class VMOffers {
 	 * Returns the average boot time of a VM in seconds.
 	 */
 	public abstract long getBootTime();
+	
+	/**
+	 * Returns the boot times for the instances offered by the provider
+	 */
+    public abstract LinkedHashMap<Vm,Integer> getVmOffersBootTime();
 
 	public VMOffers(){
 		vmOffersTable = new LinkedHashMap<Vm,Double>();

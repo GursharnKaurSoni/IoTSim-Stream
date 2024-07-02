@@ -21,7 +21,7 @@ public class Service {
         List<Service> parents;
 	List<Service> children;
 	
-        public Service(int serviceID, int ownerId, double dpReq, double userdprateReq){
+        public Service(int serviceID, int ownerId, double dpReq, double userdprateReq, boolean isMovable,int placementDatacenter){
 	        this.serviceID=serviceID;
                 cloudlets=new ArrayList<>();
 		parents = new LinkedList<Service>();
@@ -30,6 +30,8 @@ public class Service {
 		output = new LinkedList<Stream>();
 	        this.dpRequiement=dpReq;
                 this.userdprateRequiement=userdprateReq;
+        this.isMovable = isMovable;
+        this.placementDatacenter =placementDatacenter;
         }
 	
 	public int getId(){
@@ -72,6 +74,25 @@ public class Service {
 	public List<Stream> getStreamDependencies(){
 		return streamDependencies;
 	}
+	
+	public boolean isMovable() {
+		return isMovable;
+	}
+
+	public void setMovable(boolean isMovable) {
+		this.isMovable = isMovable;
+	}
+
+	public int getPlacementDatacenter() {
+		return placementDatacenter;
+	}
+
+	public void setPlacementDatacenter(int placementDatacenter) {
+		this.placementDatacenter = placementDatacenter;
+	}
+
+	boolean isMovable;
+	int placementDatacenter;
 	
 	public ServiceCloudlet getServiceCloudletByVM(int vmid){
             for(ServiceCloudlet cl: cloudlets)

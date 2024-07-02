@@ -53,5 +53,16 @@ public class VMOffersEdgeDataCenter1  extends VMOffers{
 	public long getBootTime() {
 		return Long.parseLong(Properties.VM_DELAY.getProperty());
 	}
+	
+	@Override
+	public LinkedHashMap<Vm,Integer> getVmOffersBootTime() {
+		LinkedHashMap<Vm, Integer> vmOffersBootTimeTable= new LinkedHashMap<Vm, Integer>();
+		for(Vm vm: vmOffersTable.keySet())
+        {
+            int boottime= 0;
+            vmOffersBootTimeTable.put(vm, boottime);
+		}
+		return vmOffersBootTimeTable;
+	}
 
 }

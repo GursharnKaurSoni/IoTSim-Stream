@@ -17,6 +17,7 @@ public class ServiceCloudlet extends Cloudlet{
     double serviceProcessingSize; // service processing requirement (in MI/MB)
     double relativeProcessingPercent; //it is a percentage of cloudlet processing to otherc cloudlets within a service. For example, if service has two cloudlets scheduled on two VMs, where VM1 has 2000MPIS and Vm2 has 4000MIPS so that the first cloudlet percentage is 2000/6000 and the second is 4000/6000.
     double totalOfProcessedStream;
+    double avgLatency; 
     
     public ServiceCloudlet(int cloudletId, long cloudletLength, int pesNumber, long cloudletFileSize, long cloudletOutputSize, UtilizationModel utilizationModelCpu, UtilizationModel utilizationModelRam, UtilizationModel utilizationModelBw, double serviceProcessingSize,int ownerid, int serviceID) {
         super(cloudletId, cloudletLength, pesNumber, cloudletFileSize, cloudletOutputSize, utilizationModelCpu, utilizationModelRam, utilizationModelBw);

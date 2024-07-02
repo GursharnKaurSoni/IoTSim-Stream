@@ -1,8 +1,5 @@
 package iotsimstream;
 
-import iotsimstream.vmOffers.VMOffers;
-import iotsimstream.edge.EdgeDatacenter;
-import iotsimstream.schedulingPolicies.Policy;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,6 +17,10 @@ import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEntity;
 import org.cloudbus.cloudsim.core.SimEvent;
 
+import iotsimstream.edge.EdgeDatacenter;
+import iotsimstream.schedulingPolicies.Policy;
+import iotsimstream.vmOffers.VMOffers;
+
 /**
  * This class handles the whole process of stream graph application (aka stream workflow)
  * execution, including: parsing xml file, defining
@@ -32,6 +33,7 @@ public class GraphAppEngine extends SimEntity{
 
         private static final int START_DELAY = 998800;
         private static final int DO_PROVISIONING_AND_SCHEDULING=998802;
+        private static final int AVG_LAT=9000;
         protected final static double minDPUnit = 1; //minimum stream processing unit (in MB per second, e.g. processing at least 0.1 MB/s)
         private double requestedSimulationTime; //Unit: in seconds
         private static double startupTime; //Unit: in seconds
@@ -39,6 +41,9 @@ public class GraphAppEngine extends SimEntity{
 	private double endTime;
 	private String dagFile;
 	private Policy policy;
+	boolean calculateCost=false;
+	private static final int COST_CALCULATION=998804;
+	
 	
         private GraphAppClouldlet graphAppCloudlet;
 	private HashMap<Integer,Boolean> freeVmList;
@@ -58,6 +63,8 @@ public class GraphAppEngine extends SimEntity{
         private ArrayList<Service> services;
         int datacenterCount; //incremental count for datacenters starting from 0
         static double totalProcessedStreams;
+        double totalProcessedData;
+        double avgLatency;
         
         /**
          * The map between CloudSim assigned IDS for dataceners and incremental counters for these datacenters.
@@ -92,6 +99,7 @@ public class GraphAppEngine extends SimEntity{
                 datacenterIDsMap=new HashMap<Integer, Integer>();
                 services=new ArrayList<Service>();
                 totalProcessedStreams=0.0;
+                this.totalProcessedData = 0.0;
                 
                 //Initialize StreamSchedulingOnSVMs object
                 StreamSchedulingOnSVMs.init();
@@ -109,6 +117,10 @@ public class GraphAppEngine extends SimEntity{
                                 case CloudSimTags.VM_CREATE_ACK: processVmCreate(ev); break;
 				case START_DELAY:	processStartDelay(); break;
                                 case CloudSimTags.END_OF_SIMULATION: processEndOfSimulation(); break;
+                                case CloudSimTags.CLOUDLET_CANCEL: processCloudletCancel(ev); break;
+                                //case COST_CALCULATION: processCostCalculation(); break;
+                                case CloudSimTags.CLOUDLET_RETURN: processCloudletReturn(ev); break;
+                                case AVG_LAT: processAverageLatency(); break;
 				default: Log.printLine("Warning: "+CloudSim.clock()+": "+this.getName()+": Unknown event ignored. Tag: "+tag);
 			}
 		}
@@ -178,7 +190,11 @@ public class GraphAppEngine extends SimEntity{
                 //fill ServiceMap, each entry is service id and service object
                 for(Service service: services)
                     serviceMap.put(service.getId(), service);
-                    
+                 
+                
+                 //Schedule cost calculation per second during simulation time (i.e. until end of simulation)
+                calculateCost=true;
+                //sendNow(getId(), COST_CALCULATION);
                 //Initilize StreamSchedulingOnSVMs class -----------------------------
                 //Set datacenter canonical IDs
                 StreamSchedulingOnSVMs.setDatacenterCanonicalIDsMap(datacenterIDsMap);                
@@ -261,6 +277,8 @@ public class GraphAppEngine extends SimEntity{
                     
                     //Schedule stop simulation time (end of siulation event) according to requested time
                     schedule(getId(), requestedSimulationTime, CloudSimTags.END_OF_SIMULATION);
+                    
+                    sendNow(getId(), AVG_LAT);
                     
                     //Start sending streams from external sources
                     startEXSourceStreams();
@@ -410,11 +428,53 @@ public class GraphAppEngine extends SimEntity{
             endTime =  CloudSim.clock();
             
             totalProcessedStreams=totalOfProcessedStreams;
+            System.out.println("The average latency is ***"+avgLatency);
             CloudSim.terminateSimulation();
-        }
+       }
         
         public static double getMinDPUnit()
         {
             return minDPUnit;
         }
+        
+        
+        protected void processAverageLatency() {
+        	
+        	//Get latency and processed streams size
+            double totalAvgLatencyForCloudlets=0.0;
+            int numOfCloudlets=0;
+            //double totalOfProcessedStreams=0;
+            for(Integer serviceid: serviceMap.keySet())
+            {
+                Service service=serviceMap.get(serviceid);
+                try {
+                    //Make status of Cloudlet as SUCCESS to stop running service (stope service) 
+                    for(ServiceCloudlet cl: service.getServiceCloudlets())
+                    {
+                        //totalOfProcessedStreams+=cl.totalOfProcessedStream;
+                        totalProcessedData+=cl.totalOfProcessedStream;
+                        totalAvgLatencyForCloudlets+= cl.avgLatency;
+                        numOfCloudlets++;
+                    }
+                    //JOptionPane.showMessageDialog(null, task.getServiceCloudlet().getCloudletStatusString());
+                } catch (Exception ex) {
+                    //
+                }
+            }
+            //Calculate average latency across all cloudlets
+            double avgLatencyPerSec = totalAvgLatencyForCloudlets/ numOfCloudlets;
+            avgLatency= (avgLatency + avgLatencyPerSec) /2;
+                    
+            schedule(getId(),1, AVG_LAT);
+        }
+        
+        protected void processCloudletReturn(SimEvent ev) {
+        	
+        }
+        private void processCloudletCancel(SimEvent ev) {
+        	
+        }
+      
+        
+       
 }

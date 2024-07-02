@@ -226,7 +226,7 @@ public abstract class Policy extends DefaultHandler {
                         if(attributes.getValue("userreq") !=null)
                             userDPRateReq= Double.parseDouble(attributes.getValue("userreq")); //MB/s;
                         
-                        Service service = new Service(serviceCount,ownerId,serviceDPReq,userDPRateReq);
+                        Service service = new Service(serviceCount,ownerId,serviceDPReq,userDPRateReq,false,0);
 			xmlServiceIDsMap.put(id, service);
                         serviceMap.put(service.getId(), service);
 			services.add(service);
