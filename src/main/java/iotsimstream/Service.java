@@ -169,7 +169,7 @@ public class Service {
         
         public boolean isStreamProducerEXSource(Stream stream)
         {
-            if(stream.getTypeOfProducer().equalsIgnoreCase("exsource"))
+            if(stream.getTypeOfProducer().equalsIgnoreCase("iotsource"))
                 return true;
             else
                 return false;

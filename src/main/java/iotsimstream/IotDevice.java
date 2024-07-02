@@ -40,7 +40,7 @@ public class IotDevice extends SimEntity {
 			String communicationProtocol) {
 		super(name);
 		this.datarate = datarate;
-		stream = new Stream(streamid, ownerId, getId(), "exsource", this.datarate);
+		stream = new Stream(streamid, ownerId, getId(), "iotsource", this.datarate);
 		stopSendingStream = false;
 		this.networkType = networkType;
 		this.communicationProtocol = communicationProtocol;

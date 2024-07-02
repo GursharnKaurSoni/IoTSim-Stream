@@ -64,7 +64,6 @@ public class App3Simulation {
                     Properties.DAG_FILE.setProperty(System.getProperty("user.dir") + File.separator + "Sample_Stream_Workflows/App3.xml");
                     
                     //Get number of datacenters
-                    //Get number of datacenters
                     int NumOfDatacenters = 0;
                     int NumOfEdgeDatacenters= 0;
                     
