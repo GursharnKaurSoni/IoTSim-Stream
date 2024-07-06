@@ -1,22 +1,20 @@
 package iotsimstream.vmOffers;
 
 import java.util.LinkedHashMap;
-import java.util.Map;
-
-import org.cloudbus.cloudsim.Vm;
-
-import iotsimstream.Properties;
 
 /**
  * This class provide different VM options offered by a particular Edge provider
  *
- * @author Mutaz Barika
+ * @author Gursharn Soni
  */
 
-public class VmOffersDatacenter1 extends VMOffers {
+import org.cloudbus.cloudsim.Vm;
+
+import iotsimstream.Properties;
 	
+public class VMOffersEdgeDatacenter1  extends VMOffers{
 	
-        double baseMips=Double.parseDouble(Properties.MIPS_PERCORE.getProperty(0));
+	double baseMips=Double.parseDouble(Properties.EDGE_MIPS_PERCORE.getProperty(1));
         long vmBw=1000;
 	
 	@Override
@@ -25,10 +23,10 @@ public class VmOffersDatacenter1 extends VMOffers {
 		if(vmOffersTable.size()==0)
                 {
                     //Note that price is in cents per second
-                    vmOffersTable.put(new Vm(0,0, baseMips,2, 4099,vmBw,  8129,"",null), (double)  ((0.2*100)/3600)); //Small
-                    vmOffersTable.put(new Vm(1,0, baseMips,4,  7169,vmBw,  16384,"",null), (double)  ((0.4*100)/3600)); //Medium
-                    vmOffersTable.put(new Vm(2,0, baseMips,8,  14339,vmBw,  32768,"",null), (double)  ((0.6*100)/3600)); //Large
-                    vmOffersTable.put(new Vm(3,0, baseMips,16,  30729,vmBw,  65536,"",null), (double)  ((0.8*100)/3600)); //XLarge
+                    vmOffersTable.put(new Vm(0,0, baseMips,1, 1024,vmBw,  8192,"",null), (double)  ((0.05*100)/3600)); //Small
+                    vmOffersTable.put(new Vm(1,0, baseMips,2,  4096,vmBw,  18432,"",null), (double)  ((0.22*100)/3600)); //Medium
+                    vmOffersTable.put(new Vm(2,0, baseMips,4,  8192,vmBw,  34816,"",null), (double)  ((0.34*100)/3600)); //Large
+                    vmOffersTable.put(new Vm(3,0, baseMips,9,  32678,vmBw,  69632,"",null), (double)  ((0.85*100)/3600)); //XLarge
                 }
                 
 		return vmOffersTable;
@@ -48,14 +46,14 @@ public class VmOffersDatacenter1 extends VMOffers {
             }
             
             return 0;
+            
         }
-        
         
 	@Override
 	public long getBootTime() {
-		return Long.parseLong(Properties.VM_DELAY.getProperty());
+		return Long.parseLong(Properties.EDGE_VM_DELAY.getProperty());
 	}
-
+	
 	@Override
 	public LinkedHashMap<Vm,Integer> getVmOffersBootTime() {
 		LinkedHashMap<Vm, Integer> vmOffersBootTimeTable= new LinkedHashMap<Vm, Integer>();
@@ -66,4 +64,5 @@ public class VmOffersDatacenter1 extends VMOffers {
 		}
 		return vmOffersBootTimeTable;
 	}
+
 }

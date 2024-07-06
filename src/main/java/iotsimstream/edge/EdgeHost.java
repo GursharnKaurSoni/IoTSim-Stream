@@ -20,15 +20,12 @@ public class EdgeHost extends Host{
 	 * RASPBERRY_PI, SMART_ROUTER, UDOO_BOARD, MOBILE_PHONE,
 	 */
 	String edgeType;
-	Location location;
 	
 
-	public EdgeHost(String edgeType, Location loc,int id, RamProvisioner ramProvisioner, BwProvisioner bwProvisioner, long storage,
+	public EdgeHost(String edgeType, int id, RamProvisioner ramProvisioner, BwProvisioner bwProvisioner, long storage,
 			List<? extends Pe> peList, VmScheduler vmScheduler) {
 		super(id, ramProvisioner, bwProvisioner, storage, peList, vmScheduler);
 		this.edgeType = edgeType;
-		this.location = loc;
-		
 	}
 
 }

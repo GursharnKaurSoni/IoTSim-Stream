@@ -14,6 +14,7 @@ import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.UtilizationModelFull;
 import org.cloudbus.cloudsim.Vm;
 
+import iotsimstream.Properties;
 import iotsimstream.ProvisionedSVm;
 import iotsimstream.SVM;
 import iotsimstream.Service;
@@ -142,7 +143,7 @@ public class CloudEdgeSchedulingPolicy extends Policy {
 				double vmCost = datacentersWithVMOffers.get(placementDatacenterID).getVmOffers().get(instance);
 				vmOffers = datacentersWithVMOffers.get(placementDatacenterID);
 				if (vmOffers.getClass().toString().contains("Edge")) {
-					EdgeSVM edgeSVM = new EdgeSVM("RasberryPI", vmId, ownerId, instance.getMips(),
+					EdgeSVM edgeSVM = new EdgeSVM(Properties.EDGE_HOST_TYPE.getProperty(placementDatacenterID), vmId, ownerId, instance.getMips(),
 							instance.getNumberOfPes(), instance.getRam(), instance.getBw(), instance.getSize(),
 							"", new ServiceCloudletSchedulerSpaceShared());
 					provisionAndAddCloudlet(edgeSVM, vmCost, placementDatacenterID, serviceSize, ownerId,

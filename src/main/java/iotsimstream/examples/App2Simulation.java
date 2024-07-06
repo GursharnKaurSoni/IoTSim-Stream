@@ -7,9 +7,7 @@ import iotsimstream.schedulingPolicies.Policy;
 import iotsimstream.Properties;
 import iotsimstream.edge.EdgeDatacenter;
 import iotsimstream.edge.EdgeHost;
-import iotsimstream.edge.EdgeProperties;
 import iotsimstream.edge.EdgeVmAllocationPolicy;
-import iotsimstream.edge.Location;
 import iotsimstream.vmOffers.VMOffers;
 import java.io.File;
 import java.util.ArrayList;
@@ -65,26 +63,41 @@ public class App2Simulation {
                     
                     
                     //Get number of datacenters
-                    int NumOfDatacenters = 0;
-                    int NumOfEdgeDatacenters= 0;
+                    int numOfDatacenters = 0;
+                    int numOfEdgeDatacenters= 0;
                     
-                  //Get number of datacenters
+                    //Get number of  cloud datacenters
 					if (Properties.DATACENTERS.getKey().contains("cloud")) {
-						NumOfDatacenters = Integer.parseInt(Properties.DATACENTERS.getProperty());
+						numOfDatacenters = Integer.parseInt(Properties.DATACENTERS.getProperty());
      				}
-                    if(EdgeProperties.EDGE_DATACENTER.getKey().contains("edge")) {
-                    	NumOfEdgeDatacenters = Integer.parseInt(EdgeProperties.EDGE_DATACENTER.getProperty());
+					
+					//Get number of  edge datacenters
+                    if(Properties.EDGE_DATACENTER.getKey().contains("edge")) {
+                    	numOfEdgeDatacenters = Integer.parseInt(Properties.EDGE_DATACENTER.getProperty());
                    }
                     
-                    //Print simulation configuration
+                    //Print simulation for cloud and edge configuration
                     Log.printLine("========== Simulation configuration ==========");
                     for (Properties property: Properties.values()){
                         if(property.getProperty(0)==null)
                             Log.printLine("= "+property+": "+property.getProperty());
                         else
-                            for(int i=0;i<NumOfDatacenters;i++)
-                                Log.printLine("= "+property+" (DC"+i+"): "+property.getProperty(i));
-                    }
+                            for(int i=0;i<numOfDatacenters;i++) {
+                            	if(! property.getKey().contains("edge"))
+						      	Log.printLine("= " + property + " (DC" + i + "): " + property.getProperty(i));
+                            	
+                            }
+                   }
+                    for (Properties property: Properties.values()){
+                        if(property.getProperty(0)==null)
+                            Log.printLine("= "+property+": "+property.getProperty());
+                        else
+                            for(int i=0;i<numOfEdgeDatacenters;i++) {
+                            	if(property.getKey().contains("edge"))
+						      	Log.printLine("= " + property + " (EdgeDC" + i + "): " + property.getProperty(i));
+						      	
+                            }
+                   }
                     Log.printLine("==============================================");
                     Log.printLine("");
                 
@@ -101,13 +114,13 @@ public class App2Simulation {
                     ArrayList<Datacenter> totalDataCenter= new ArrayList<Datacenter>();
                     
                     long seedVmDelay= 1040529;
-                    for(int i=0;i<NumOfDatacenters;i++)
+                    for(int i=0;i<numOfDatacenters;i++)
                     {
                         BigDatacenter datacenter = createBigDatacenter(i, "Datacenter" + i, seedVmDelay);
                         listDatacenters.add(datacenter);
                         totalDataCenter.add(datacenter);
                     }
-                    for(int i=0;i<NumOfEdgeDatacenters;i++)
+                    for(int i=0;i<numOfEdgeDatacenters;i++)
                     {
                         EdgeDatacenter edgedatacenter = createEdgeDatacenter(i, "EdgeDatacenter" + i, seedVmDelay);
                         listEdgeDatacenters.add(edgedatacenter);
@@ -126,7 +139,7 @@ public class App2Simulation {
                     double thisDatacenterEgressLat;
                     for(int i=0;i<totalDataCenter.size();i++)
                     {
-                        //Get datacenter    
+                        //Get  edge datacenters    
                     	if(totalDataCenter.get(i).getName().contains("Edge")) {
                     		EdgeDatacenter datacenter=(EdgeDatacenter)totalDataCenter.get(i);
                     		
@@ -134,8 +147,8 @@ public class App2Simulation {
                             NetworkTopology.addLink(engine.getId(),datacenter.getId(),engineBandwidth,engineLatency);
 
                             //Get egress bandwidth and latency of this datacenter with other datacenters (i.e egress network of this datacenter)
-                            thisDatacenterEgressBw = Double.parseDouble(EdgeProperties.EDGE_EXTERNAL_BANDWIDTH.getProperty(totalDataCenter.get(i).getId()-startingSimCount)); //MBps //double bw = DSNetMatrix.getBandwidth(datacenterNumber, datacenterNumber);
-                            thisDatacenterEgressLat = Double.parseDouble(EdgeProperties.EDGE_EXTERNAL_LATENCY.getProperty(totalDataCenter.get(i).getId()-startingSimCount)); //MBps //double bw = DSNetMatrix.getBandwidth(datacenterNumber, datacenterNumber);
+                            thisDatacenterEgressBw = Double.parseDouble(Properties.EDGE_EXTERNAL_BANDWIDTH.getProperty(totalDataCenter.get(i).getId()-startingSimCount)); //MBps //double bw = DSNetMatrix.getBandwidth(datacenterNumber, datacenterNumber);
+                            thisDatacenterEgressLat = Double.parseDouble(Properties.EDGE_EXTERNAL_LATENCY.getProperty(totalDataCenter.get(i).getId()-startingSimCount)); //MBps //double bw = DSNetMatrix.getBandwidth(datacenterNumber, datacenterNumber);
  
                             //Fill egress bandwidth map and latency maps of this datacenter with other datacenters
                             for(int j=0;j<totalDataCenter.size();j++)
@@ -148,6 +161,7 @@ public class App2Simulation {
                                 datacenter.getDestDatacenterEgressLatMap().put(otherDatacenter.getId(), thisDatacenterEgressLat);
                             }
                         }
+                    	// get the cloud datacenters
                     	else {
 							BigDatacenter datacenter = (BigDatacenter) totalDataCenter.get(i);
 							// Add link between engine and this datacenter with engine network bandwidth and latency
@@ -226,23 +240,29 @@ public class App2Simulation {
             return new BigDatacenter(name,characteristics,new VmAllocationPolicySimple(hostList),bw,latency,mips,creationVMDelay,offers,seedVmDelayGenerator);
     }
     
+    
+    
+    /**
+     * method to set the edge datacenter properties
+     * @param edgeDatacenterNumber
+     * @param name
+     * @param seedVmDelayGenerator
+     * @return
+     * @throws Exception
+     */    
     private static EdgeDatacenter createEdgeDatacenter(int edgeDatacenterNumber, String name, long seedVmDelayGenerator)
 			throws Exception {
 
-		int hosts = Integer.parseInt(EdgeProperties.EDGE_HOST.getProperty(edgeDatacenterNumber));
-		int ram = Integer.parseInt(EdgeProperties.EDGE_HOST_MEMORY.getProperty(edgeDatacenterNumber));
-		int cores = Integer.parseInt(EdgeProperties.EDGE_HOST_CORES.getProperty(edgeDatacenterNumber));
-		int mips = Integer.parseInt(EdgeProperties.EDGE_MIPS_PERCORE.getProperty(edgeDatacenterNumber));
-		long storage = Long.parseLong(EdgeProperties.EDGE_HOST_STORAGE.getProperty(edgeDatacenterNumber));
+		int hosts = Integer.parseInt(Properties.EDGE_HOST.getProperty(edgeDatacenterNumber));
+		int ram = Integer.parseInt(Properties.EDGE_HOST_MEMORY.getProperty(edgeDatacenterNumber));
+		int cores = Integer.parseInt(Properties.EDGE_HOST_CORES.getProperty(edgeDatacenterNumber));
+		int mips = Integer.parseInt(Properties.EDGE_MIPS_PERCORE.getProperty(edgeDatacenterNumber));
+		long storage = Long.parseLong(Properties.EDGE_HOST_STORAGE.getProperty(edgeDatacenterNumber));
 		double bw = Double.parseDouble(Properties.INTERNAL_BANDWIDTH.getProperty(edgeDatacenterNumber));
 		double latency = Double.parseDouble(Properties.INTERNAL_LATENCY.getProperty(edgeDatacenterNumber));
-		long creationVMDelay = Long.parseLong(EdgeProperties.EDGE_VM_DELAY.getProperty(edgeDatacenterNumber));
-		String offerName = EdgeProperties.VM_OFFERS.getProperty(edgeDatacenterNumber);
-		String type = EdgeProperties.EDGE_HOST_TYPE.getProperty(edgeDatacenterNumber);
-		Double locationX = Double.parseDouble(EdgeProperties.EDGE_HOST_LOCATION_X.getProperty(edgeDatacenterNumber));
-		Double locationY = Double.parseDouble(EdgeProperties.EDGE_HOST_LOCATION_Y.getProperty(edgeDatacenterNumber));
-		Double locationZ = Double.parseDouble(EdgeProperties.EDGE_HOST_LOCATION_Z.getProperty(edgeDatacenterNumber));
-		Location loc = new Location(locationX, locationY, locationZ);
+		long creationVMDelay = Long.parseLong(Properties.EDGE_VM_DELAY.getProperty(edgeDatacenterNumber));
+		String offerName = Properties.EDGE_VM_OFFERS.getProperty(edgeDatacenterNumber);
+		String type = Properties.EDGE_HOST_TYPE.getProperty(edgeDatacenterNumber);
 
 		VMOffers offers = null;
 		try {
@@ -261,7 +281,7 @@ public class App2Simulation {
 			}
 
 			double totalHostBw = 10000;
-			hostList.add(new EdgeHost(type, loc, i, new RamProvisionerSimple(ram),
+			hostList.add(new EdgeHost(type, i, new RamProvisionerSimple(ram),
 					new BwProvisionerSimple((long) totalHostBw), storage, peList, new VmSchedulerTimeShared(peList)));
 		}
 
