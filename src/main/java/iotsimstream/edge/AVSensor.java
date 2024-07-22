@@ -18,7 +18,7 @@ public class AVSensor extends IotDevice {
 	public static final int DATA_SIZE=2;
 
 	public AVSensor(String name, int streamid, int ownerId, double datarate,String networkType, String communicationProtocol) {
-		super(IoTType.CAR_SENSOR, name, streamid, ownerId, datarate, networkType, communicationProtocol);
+		super(IotType.CAR_SENSOR, name, streamid, ownerId, datarate, networkType, communicationProtocol);
 	}
 
 	public String getNetworkType() {
