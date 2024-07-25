@@ -216,6 +216,7 @@ public class App2Simulation {
             try{				
                     Class<?> offerClass = Class.forName(offerName,true,VMOffers.class.getClassLoader());
                     offers = (VMOffers) offerClass.newInstance();
+                    offers.SetDataCenterType("BigDataCenter");
             } catch (Exception e){
                     e.printStackTrace();
                     return null;
@@ -268,6 +269,7 @@ public class App2Simulation {
 		try {
 			Class<?> offerClass = Class.forName(offerName, true, VMOffers.class.getClassLoader());
 			offers = (VMOffers) offerClass.newInstance();
+			offers.SetDataCenterType("EdgeDataCenter");
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;

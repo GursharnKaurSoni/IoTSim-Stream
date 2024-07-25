@@ -14,8 +14,9 @@ import org.cloudbus.cloudsim.Vm;
  *
  */
 public abstract class VMOffers {
-	
+		
 	LinkedHashMap<Vm,Double> vmOffersTable=new LinkedHashMap<>();
+	public String dataCenterType;
 	
 	/**
 	 * Returns the instances offered by the provider, and the respective
@@ -58,4 +59,12 @@ public abstract class VMOffers {
             }
             return null;
         }
+
+		public String getDataCenterType() {
+			return dataCenterType;
+		}
+
+		public void SetDataCenterType(String dataCenterType) {
+			this.dataCenterType = dataCenterType;
+		}
 }

@@ -185,7 +185,7 @@ public class SimpleSchedulingPolicy extends Policy {
 																										// instance
 						double vmCost = datacentersWithVMOffers.get(placementDatacenterID).getVmOffers().get(instance);
 						vmOffers = datacentersWithVMOffers.get(placementDatacenterID);
-						if (vmOffers.getClass().toString().contains("Edge")) {
+						if (vmOffers.getDataCenterType().equalsIgnoreCase("EdgeDataCenter")) {
 							EdgeSVM edgeSVM = new EdgeSVM(Properties.EDGE_HOST_TYPE.getProperty(placementDatacenterID), vmId, ownerId, instance.getMips(),
 									instance.getNumberOfPes(), instance.getRam(), instance.getBw(), instance.getSize(),
 									"", new ServiceCloudletSchedulerSpaceShared());
@@ -200,7 +200,7 @@ public class SimpleSchedulingPolicy extends Policy {
 						}
 					
                     schedulingTable.put(service.getId(), vmidList);
-
+                 
                     //set stream dependencies info
                     for(Stream stream:service.getStreamDependencies()){
                             if(!streamRequiredLocation.containsKey(stream.getId())){

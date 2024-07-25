@@ -142,7 +142,7 @@ public class CloudEdgeSchedulingPolicy extends Policy {
 				Vm instance = datacentersWithVMOffers.get(placementDatacenterID).getVM(vmid);
 				double vmCost = datacentersWithVMOffers.get(placementDatacenterID).getVmOffers().get(instance);
 				vmOffers = datacentersWithVMOffers.get(placementDatacenterID);
-				if (vmOffers.getClass().toString().contains("Edge")) {
+				if (vmOffers.getDataCenterType().equalsIgnoreCase("EdgeDataCenter")) {
 					EdgeSVM edgeSVM = new EdgeSVM(Properties.EDGE_HOST_TYPE.getProperty(placementDatacenterID), vmId, ownerId, instance.getMips(),
 							instance.getNumberOfPes(), instance.getRam(), instance.getBw(), instance.getSize(),
 							"", new ServiceCloudletSchedulerSpaceShared());
