@@ -26,8 +26,7 @@ public class VMOffersEdgeDatacenter1  extends VMOffers{
                     vmOffersTable.put(new Vm(0,0, baseMips,1, 1024,vmBw,  8192,"",null), (double)  ((0.05*100)/3600)); //Small
                     vmOffersTable.put(new Vm(1,0, baseMips,2,  4096,vmBw,  18432,"",null), (double)  ((0.22*100)/3600)); //Medium
                     vmOffersTable.put(new Vm(2,0, baseMips,4,  8192,vmBw,  34816,"",null), (double)  ((0.34*100)/3600)); //Large
-                    vmOffersTable.put(new Vm(3,0, baseMips,9,  32678,vmBw,  69632,"",null), (double)  ((0.85*100)/3600)); //XLarge
-                }
+            }
                 
 		return vmOffersTable;
 	}
