@@ -14,9 +14,8 @@ import org.cloudbus.cloudsim.Vm;
  *
  */
 public abstract class VMOffers {
-		
+	
 	LinkedHashMap<Vm,Double> vmOffersTable=new LinkedHashMap<>();
-	public String dataCenterType;
 	
 	/**
 	 * Returns the instances offered by the provider, and the respective
@@ -40,11 +39,6 @@ public abstract class VMOffers {
 	 * Returns the average boot time of a VM in seconds.
 	 */
 	public abstract long getBootTime();
-	
-	/**
-	 * Returns the boot times for the instances offered by the provider
-	 */
-    public abstract LinkedHashMap<Vm,Integer> getVmOffersBootTime();
 
 	public VMOffers(){
 		vmOffersTable = new LinkedHashMap<Vm,Double>();
@@ -59,12 +53,4 @@ public abstract class VMOffers {
             }
             return null;
         }
-
-		public String getDataCenterType() {
-			return dataCenterType;
-		}
-
-		public void SetDataCenterType(String dataCenterType) {
-			this.dataCenterType = dataCenterType;
-		}
 }

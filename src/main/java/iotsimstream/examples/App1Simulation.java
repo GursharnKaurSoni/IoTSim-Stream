@@ -1,12 +1,16 @@
 package iotsimstream.examples;
 
 
+import iotsimstream.BigDatacenter;
+import iotsimstream.GraphAppEngine;
+import iotsimstream.schedulingPolicies.Policy;
+import iotsimstream.Properties;
+import iotsimstream.vmOffers.VMOffers;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
-import org.cloudbus.cloudsim.Datacenter;
 import org.cloudbus.cloudsim.DatacenterCharacteristics;
 import org.cloudbus.cloudsim.Host;
 import org.cloudbus.cloudsim.Log;
@@ -14,20 +18,10 @@ import org.cloudbus.cloudsim.NetworkTopology;
 import org.cloudbus.cloudsim.Pe;
 import org.cloudbus.cloudsim.VmAllocationPolicySimple;
 import org.cloudbus.cloudsim.VmSchedulerSpaceShared;
-import org.cloudbus.cloudsim.VmSchedulerTimeShared;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.provisioners.BwProvisionerSimple;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 import org.cloudbus.cloudsim.provisioners.RamProvisionerSimple;
-
-import iotsimstream.BigDatacenter;
-import iotsimstream.GraphAppEngine;
-import iotsimstream.Properties;
-import iotsimstream.edge.EdgeDatacenter;
-import iotsimstream.edge.EdgeHost;
-import iotsimstream.edge.EdgeVmAllocationPolicy;
-import iotsimstream.schedulingPolicies.Policy;
-import iotsimstream.vmOffers.VMOffers;
 
 /**
  * This class contains the main method for execution of the IoTSim-Strem with App1.
@@ -63,41 +57,17 @@ public class App1Simulation {
                     Properties.DAG_FILE.setProperty(System.getProperty("user.dir") + File.separator + "Sample_Stream_Workflows/App1.xml");
                     
                     //Get number of datacenters
-                    int numOfDatacenters = 0;
-                    int numOfEdgeDatacenters= 0;
+                    int NumOfDatacenters = Integer.parseInt(Properties.DATACENTERS.getProperty());
                     
-                    //Get number of Cloud datacenters
-					if (Properties.DATACENTERS.getKey().contains("cloud")) {
-						numOfDatacenters = Integer.parseInt(Properties.DATACENTERS.getProperty());
-     				}
-					
-					//Get number of Edge datacenters
-                    if(Properties.EDGE_DATACENTER.getKey().contains("edge")) {
-                    	numOfEdgeDatacenters = Integer.parseInt(Properties.EDGE_DATACENTER.getProperty());
-                   }
-                    
-                    //Print simulation for the cloud and edge configuration
+                    //Print simulation configuration
                     Log.printLine("========== Simulation configuration ==========");
                     for (Properties property: Properties.values()){
                         if(property.getProperty(0)==null)
                             Log.printLine("= "+property+": "+property.getProperty());
                         else
-                            for(int i=0;i<numOfDatacenters;i++) {
-                            	if(! property.getKey().contains("edge"))
-						      	Log.printLine("= " + property + " (DC" + i + "): " + property.getProperty(i));
-                            	
-                            }
-                   }
-                    for (Properties property: Properties.values()){
-                        if(property.getProperty(0)==null)
-                            Log.printLine("= "+property+": "+property.getProperty());
-                        else
-                            for(int i=0;i<numOfEdgeDatacenters;i++) {
-                            	if(property.getKey().contains("edge"))
-						      	Log.printLine("= " + property + " (EdgeDC" + i + "): " + property.getProperty(i));
-						      	
-                            }
-                   }
+                            for(int i=0;i<NumOfDatacenters;i++)
+                                Log.printLine("= "+property+" (DC"+i+"): "+property.getProperty(i));
+                    }
                     Log.printLine("==============================================");
                     Log.printLine("");
                 
@@ -110,76 +80,44 @@ public class App1Simulation {
 
 
                     ArrayList<BigDatacenter> listDatacenters=new ArrayList<BigDatacenter>();
-                    ArrayList<EdgeDatacenter> listEdgeDatacenters=new ArrayList<EdgeDatacenter>();
-                    ArrayList<Datacenter> totalDataCenter= new ArrayList<Datacenter>();
-                    
                     long seedVmDelay= 1040529;
-                    for(int i=0;i<numOfDatacenters;i++)
+                    for(int i=0;i<NumOfDatacenters;i++)
                     {
                         BigDatacenter datacenter = createBigDatacenter(i, "Datacenter" + i, seedVmDelay);
                         listDatacenters.add(datacenter);
-                        totalDataCenter.add(datacenter);
                     }
-                    for(int i=0;i<numOfEdgeDatacenters;i++)
-                    {
-                        EdgeDatacenter edgedatacenter = createEdgeDatacenter(i, "EdgeDatacenter" + i, seedVmDelay);
-                        listEdgeDatacenters.add(edgedatacenter);
-                        totalDataCenter.add(edgedatacenter);
-                    }
+
                     //Create engine
                     GraphAppEngine engine = createGraphAppEngine(requestedSimulationTime);
-                               
+                    
+
+                    //Add ;inks between engine and datacenters and fill engress bandwidth and latency maps between datacenters
                     double engineBandwidth = Double.parseDouble(Properties.ENGINE_NETWORK_BANDWIDTH.getProperty()); //this bandwidth between engine and datacenters
                     double engineLatency = Double.parseDouble(Properties.ENGINE_NETWORK_LATENCY.getProperty()); //this latency between engine and datacenters
-                    int startingSimCount=2;  // CloudSim starts counting for entity from 2, so the index of first datacenter is 2
-                    double thisDatacenterEgressBw;
-                    double thisDatacenterEgressLat;
-                    for(int i=0;i<totalDataCenter.size();i++)
+                    
+                    for(int i=0;i<listDatacenters.size();i++)
                     {
-                        //Get edge datacenters    
-                    	if(totalDataCenter.get(i).getName().contains("Edge")) {
-                    		EdgeDatacenter datacenter=(EdgeDatacenter)totalDataCenter.get(i);
-                    		
-                    		//Add link between engine and this datacenter with engine network bandwidth and latency
-                            NetworkTopology.addLink(engine.getId(),datacenter.getId(),engineBandwidth,engineLatency);
+                        //Get datacenter    
+                        BigDatacenter datacenter=listDatacenters.get(i); 
 
-                            //Get egress bandwidth and latency of this datacenter with other datacenters (i.e egress network of this datacenter)
-                            thisDatacenterEgressBw = Double.parseDouble(Properties.EDGE_EXTERNAL_BANDWIDTH.getProperty(totalDataCenter.get(i).getId()-startingSimCount)); //MBps //double bw = DSNetMatrix.getBandwidth(datacenterNumber, datacenterNumber);
-                            thisDatacenterEgressLat = Double.parseDouble(Properties.EDGE_EXTERNAL_LATENCY.getProperty(totalDataCenter.get(i).getId()-startingSimCount)); //MBps //double bw = DSNetMatrix.getBandwidth(datacenterNumber, datacenterNumber);
- 
-                            //Fill egress bandwidth map and latency maps of this datacenter with other datacenters
-                            for(int j=0;j<totalDataCenter.size();j++)
-                            {
-                                if(i==j)
-                                  continue;
+                        //Add link between engine and this datacenter with engine network bandwidth and latency
+                        NetworkTopology.addLink(engine.getId(),datacenter.getId(),engineBandwidth,engineLatency);
 
-                                Datacenter otherDatacenter=totalDataCenter.get(j); 
-                                datacenter.getDestDatacenterEgressBwMap().put(otherDatacenter.getId(), thisDatacenterEgressBw);
-                                datacenter.getDestDatacenterEgressLatMap().put(otherDatacenter.getId(), thisDatacenterEgressLat);
-                            }
+                        int startingSimCount=2; //CloudSim starts counting for entity from 2, so the index of first datacenter is 2
+                        //Get egress bandwidth and latency of this datacenter with other datacenters (i.e egress network of this datacenter)
+                        double thisDatacenterEgressBw = Double.parseDouble(Properties.EXTERNAL_BANDWIDTH.getProperty(listDatacenters.get(i).getId()-startingSimCount)); //MBps //double bw = DSNetMatrix.getBandwidth(datacenterNumber, datacenterNumber);
+                        double thisDatacenterEgressLat = Double.parseDouble(Properties.EXTERNAL_LATENCY.getProperty(listDatacenters.get(i).getId()-startingSimCount)); //MBps //double bw = DSNetMatrix.getBandwidth(datacenterNumber, datacenterNumber);
+
+                        //Fill egress bandwidth map and latency maps of this datacenter with other datacenters
+                        for(int j=0;j<listDatacenters.size();j++)
+                        {
+                            if(i==j)
+                              continue;;
+
+                            BigDatacenter otherDatacenter=listDatacenters.get(j); 
+                            datacenter.getDestDatacenterEgressBwMap().put(otherDatacenter.getId(), thisDatacenterEgressBw);
+                            datacenter.getDestDatacenterEgressLatMap().put(otherDatacenter.getId(), thisDatacenterEgressLat);
                         }
-                    	//get cloud datacenters
-                    	else {
-							BigDatacenter datacenter = (BigDatacenter) totalDataCenter.get(i);
-							// Add link between engine and this datacenter with engine network bandwidth and latency
-							NetworkTopology.addLink(engine.getId(), datacenter.getId(), engineBandwidth, engineLatency);
-							
-							// Get egress bandwidth and latency of this datacenter with other datacenters(i.e egress network of this datacenter)
-							thisDatacenterEgressBw = Double.parseDouble(Properties.EXTERNAL_BANDWIDTH.getProperty(totalDataCenter.get(i).getId() - startingSimCount)); // MBps //double bw =DSNetMatrix.getBandwidth(datacenterNumber,datacenterNumber);
-							thisDatacenterEgressLat = Double.parseDouble(Properties.EXTERNAL_LATENCY.getProperty(totalDataCenter.get(i).getId() - startingSimCount)); // MBps double bw = DSNetMatrix.getBandwidth(datacenterNumber,datacenterNumber);
-
-							// Fill egress bandwidth map and latency maps of this datacenter with other  datacenters
-							for (int j = 0; j < totalDataCenter.size(); j++) {
-								if (i == j)
-									continue;
-								
-								Datacenter otherDatacenter =  totalDataCenter.get(j);
-								datacenter.getDestDatacenterEgressBwMap().put(otherDatacenter.getId(),thisDatacenterEgressBw);
-								datacenter.getDestDatacenterEgressLatMap().put(otherDatacenter.getId(),thisDatacenterEgressLat);
-							}
-                    		
-                    	}
-                    	
                     }
                     
                     CloudSim.startSimulation();
@@ -213,7 +151,6 @@ public class App1Simulation {
             try{				
                     Class<?> offerClass = Class.forName(offerName,true,VMOffers.class.getClassLoader());
                     offers = (VMOffers) offerClass.newInstance();
-                    offers.SetDataCenterType("BigDataCenter");
             } catch (Exception e){
                     e.printStackTrace();
                     return null;
@@ -237,58 +174,6 @@ public class App1Simulation {
             //return new WorkflowDatacenter(name,characteristics,new VmAllocationPolicySimple(hostList),bw,latency,mips,delay,offers,seed2);
             return new BigDatacenter(name,characteristics,new VmAllocationPolicySimple(hostList),bw,latency,mips,creationVMDelay,offers,seedVmDelayGenerator);
     }
-    
-    
-    /**
-     * method to set the edge datacenter properties
-     * @param edgeDatacenterNumber
-     * @param name
-     * @param seedVmDelayGenerator
-     * @return
-     * @throws Exception
-     */
-    private static EdgeDatacenter createEdgeDatacenter(int edgeDatacenterNumber, String name, long seedVmDelayGenerator)
-			throws Exception {
-
-		int hosts = Integer.parseInt(Properties.EDGE_HOST.getProperty(edgeDatacenterNumber));
-		int ram = Integer.parseInt(Properties.EDGE_HOST_MEMORY.getProperty(edgeDatacenterNumber));
-		int cores = Integer.parseInt(Properties.EDGE_HOST_CORES.getProperty(edgeDatacenterNumber));
-		int mips = Integer.parseInt(Properties.EDGE_MIPS_PERCORE.getProperty(edgeDatacenterNumber));
-		long storage = Long.parseLong(Properties.EDGE_HOST_STORAGE.getProperty(edgeDatacenterNumber));
-		double bw = Double.parseDouble(Properties.INTERNAL_BANDWIDTH.getProperty(edgeDatacenterNumber));
-		double latency = Double.parseDouble(Properties.INTERNAL_LATENCY.getProperty(edgeDatacenterNumber));
-		long creationVMDelay = Long.parseLong(Properties.EDGE_VM_DELAY.getProperty(edgeDatacenterNumber));
-		String offerName = Properties.EDGE_VM_OFFERS.getProperty(edgeDatacenterNumber);
-		String type = Properties.EDGE_HOST_TYPE.getProperty(edgeDatacenterNumber);
-		
-		VMOffers offers = null;
-		try {
-			Class<?> offerClass = Class.forName(offerName, true, VMOffers.class.getClassLoader());
-			offers = (VMOffers) offerClass.newInstance();
-			offers.SetDataCenterType("EdgeDataCenter");
-		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
-		}
-
-		List<EdgeHost> hostList = new ArrayList<EdgeHost>();
-		for (int i = 0; i < hosts; i++) {
-			List<Pe> peList = new ArrayList<Pe>();
-			for (int j = 0; j < cores; j++) {
-				peList.add(new Pe(j, new PeProvisionerSimple(mips)));
-			}
-
-			double totalHostBw = 10000;
-			hostList.add(new EdgeHost(type, i, new RamProvisionerSimple(ram),
-					new BwProvisionerSimple((long) totalHostBw), storage, peList, new VmSchedulerTimeShared(peList)));
-		}
-
-		DatacenterCharacteristics characteristics = new DatacenterCharacteristics("x86", "Linux", "Xen", hostList, 10.0,
-				0.0, 0.05, 0.001, 0.00);
-
-		return new EdgeDatacenter(name, characteristics, new EdgeVmAllocationPolicy(hostList), bw, latency, mips,
-				creationVMDelay, offers, seedVmDelayGenerator);
-	}
 
     private static GraphAppEngine createGraphAppEngine(double requestedST){
             String dagFile = Properties.DAG_FILE.getProperty();

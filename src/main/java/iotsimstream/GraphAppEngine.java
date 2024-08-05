@@ -1,5 +1,7 @@
 package iotsimstream;
 
+import iotsimstream.vmOffers.VMOffers;
+import iotsimstream.schedulingPolicies.Policy;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -7,8 +9,6 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-
 import org.cloudbus.cloudsim.Cloudlet;
 import org.cloudbus.cloudsim.DatacenterCharacteristics;
 import org.cloudbus.cloudsim.Log;
@@ -16,10 +16,6 @@ import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEntity;
 import org.cloudbus.cloudsim.core.SimEvent;
-
-import iotsimstream.edge.EdgeDatacenter;
-import iotsimstream.schedulingPolicies.Policy;
-import iotsimstream.vmOffers.VMOffers;
 
 /**
  * This class handles the whole process of stream graph application (aka stream workflow)
@@ -33,7 +29,6 @@ public class GraphAppEngine extends SimEntity{
 
         private static final int START_DELAY = 998800;
         private static final int DO_PROVISIONING_AND_SCHEDULING=998802;
-        private static final int AVG_LAT=9000;
         protected final static double minDPUnit = 1; //minimum stream processing unit (in MB per second, e.g. processing at least 0.1 MB/s)
         private double requestedSimulationTime; //Unit: in seconds
         private static double startupTime; //Unit: in seconds
@@ -41,9 +36,6 @@ public class GraphAppEngine extends SimEntity{
 	private double endTime;
 	private String dagFile;
 	private Policy policy;
-	boolean calculateCost=false;
-	private static final int COST_CALCULATION=998804;
-	
 	
         private GraphAppClouldlet graphAppCloudlet;
 	private HashMap<Integer,Boolean> freeVmList;
@@ -53,18 +45,15 @@ public class GraphAppEngine extends SimEntity{
 	private Hashtable<Integer,ArrayList<Integer>> schedulingTable;
 	private Hashtable<Integer,SVM> vmTable;
         private List<? extends ServiceCloudlet> cloudletReceivedList;
-        private ArrayList<IotDevice> iotSources;
+        private ArrayList<ExternalSource> externSources;
         private HashMap<Integer, Service> serviceMap;
         private HashMap<Integer, Integer> ProSVMDatacenterMap;
-        //private ArrayList<Integer> datacenters;
-        private Map<Integer,String> datacenters;
+        private ArrayList<Integer> datacenters;
         private HashMap<Integer, Boolean> datacenterInitializeMap;
         private LinkedHashMap<Integer, VMOffers> datacenterWithVMOffers; //needed to preserver the order for later use
         private ArrayList<Service> services;
         int datacenterCount; //incremental count for datacenters starting from 0
         static double totalProcessedStreams;
-        double totalProcessedData;
-        double avgLatency;
         
         /**
          * The map between CloudSim assigned IDS for dataceners and incremental counters for these datacenters.
@@ -89,17 +78,15 @@ public class GraphAppEngine extends SimEntity{
                 
                 
                 streamRequiredLocation=new Hashtable<Integer,HashSet<Integer>>();
-                iotSources=new ArrayList<IotDevice>();
+                externSources=new ArrayList<ExternalSource>();
                 serviceMap=new HashMap<Integer, Service>();
-                //datacenters=new ArrayList<Integer>();
-                datacenters=new HashMap<Integer,String>();
+                datacenters=new ArrayList<Integer>();
                 datacenterInitializeMap=new HashMap<>();
                 datacenterWithVMOffers=new LinkedHashMap<Integer,VMOffers>();
                 ProSVMDatacenterMap=new HashMap<Integer,Integer>();
                 datacenterIDsMap=new HashMap<Integer, Integer>();
                 services=new ArrayList<Service>();
                 totalProcessedStreams=0.0;
-                this.totalProcessedData = 0.0;
                 
                 //Initialize StreamSchedulingOnSVMs object
                 StreamSchedulingOnSVMs.init();
@@ -117,10 +104,6 @@ public class GraphAppEngine extends SimEntity{
                                 case CloudSimTags.VM_CREATE_ACK: processVmCreate(ev); break;
 				case START_DELAY:	processStartDelay(); break;
                                 case CloudSimTags.END_OF_SIMULATION: processEndOfSimulation(); break;
-                                case CloudSimTags.CLOUDLET_CANCEL: processCloudletCancel(ev); break;
-                                //case COST_CALCULATION: processCostCalculation(); break;
-                                case CloudSimTags.CLOUDLET_RETURN: processCloudletReturn(ev); break;
-                                case AVG_LAT: processAverageLatency(); break;
 				default: Log.printLine("Warning: "+CloudSim.clock()+": "+this.getName()+": Unknown event ignored. Tag: "+tag);
 			}
 		}
@@ -132,9 +115,7 @@ public class GraphAppEngine extends SimEntity{
             //Get datacenter characteristics and add its id in the list (i.e. add datacenter ID in the list)
             DatacenterCharacteristics characteristics=(DatacenterCharacteristics) ev.getData();
             int datacenterid=characteristics.getId();
-            //datacenters.add(datacenterid); 
-            SimEntity source = CloudSim.getEntity(ev.getSource());
-            datacenters.put(datacenterid, source.getName());
+            datacenters.add(datacenterid);  
             datacenterIDsMap.put(datacenterid, datacenterCount);
             datacenterInitializeMap.put(datacenterid, Boolean.TRUE);
             datacenterCount++;
@@ -182,7 +163,7 @@ public class GraphAppEngine extends SimEntity{
                 graphAppCloudlet=new GraphAppClouldlet(services);
                 
                 //Get external sources
-                iotSources=policy.getIoTSources();
+                externSources=policy.getExternalSources();
                 
 		//trigger creation of vms
 		createVMs(vms);
@@ -190,11 +171,7 @@ public class GraphAppEngine extends SimEntity{
                 //fill ServiceMap, each entry is service id and service object
                 for(Service service: services)
                     serviceMap.put(service.getId(), service);
-                 
-                
-                 //Schedule cost calculation per second during simulation time (i.e. until end of simulation)
-                calculateCost=true;
-                //sendNow(getId(), COST_CALCULATION);
+                    
                 //Initilize StreamSchedulingOnSVMs class -----------------------------
                 //Set datacenter canonical IDs
                 StreamSchedulingOnSVMs.setDatacenterCanonicalIDsMap(datacenterIDsMap);                
@@ -226,23 +203,15 @@ public class GraphAppEngine extends SimEntity{
             }
         }
         
-		private void collectVMOffers() {
-			
-			for (Map.Entry<Integer, String> entry : datacenters.entrySet()) {
-				Integer datacenterID = entry.getKey();
-				String dataCenterName = entry.getValue();
-				if (dataCenterName.contains("Edge")) {
-					EdgeDatacenter datacenter = (EdgeDatacenter) CloudSim.getEntity(datacenterID);
-					datacenterWithVMOffers.put(datacenterID, datacenter.vmOffers);
-					datacenter.vmOffers.getVmOffers();
-				} else {
-					BigDatacenter datacenter = (BigDatacenter) CloudSim.getEntity(datacenterID);
-					datacenterWithVMOffers.put(datacenterID, datacenter.vmOffers);
-					datacenter.vmOffers.getVmOffers();
-				}
-			}
-
-		}
+        private void collectVMOffers()
+        {
+            for(Integer datacenterID: datacenters)
+            {
+                BigDatacenter datacenter=(BigDatacenter) CloudSim.getEntity(datacenterID);
+                datacenterWithVMOffers.put(datacenterID, datacenter.vmOffers);
+                datacenter.vmOffers.getVmOffers(); //this statement is required to fill vmOffersTable (initilization) for vmOffer object
+            }
+        }
         
 	protected void processVmCreate(SimEvent ev) {
 		int[] data = (int[]) ev.getData();
@@ -278,26 +247,26 @@ public class GraphAppEngine extends SimEntity{
                     //Schedule stop simulation time (end of siulation event) according to requested time
                     schedule(getId(), requestedSimulationTime, CloudSimTags.END_OF_SIMULATION);
                     
-                    sendNow(getId(), AVG_LAT);
-                    
                     //Start sending streams from external sources
                     startEXSourceStreams();
                 }
 	}
-
+	
 	private void processStartDelay() {
-
-		for (Integer resid : CloudSim.getCloudResourceList()) {
-			if (CloudSim.getEntity(resid).getName().contains("Edge")) {
-				EdgeDatacenter datacenter = (EdgeDatacenter) CloudSim.getEntity(resid);
-				datacenterInitializeMap.put(datacenter.getId(), Boolean.FALSE);
-				sendNow(datacenter.getId(), CloudSimTags.RESOURCE_CHARACTERISTICS, getId());
-			} else {
-				BigDatacenter datacenter = (BigDatacenter) CloudSim.getEntity(resid);
-				datacenterInitializeMap.put(datacenter.getId(), Boolean.FALSE);
-				sendNow(datacenter.getId(), CloudSimTags.RESOURCE_CHARACTERISTICS, getId());
-			}
-		}
+	
+                //Add all datacenters ids to datacenterInitializeMap and their values are false in order to allow checking their initialization later on (when receiving reosurce_characteristics event from each one)
+                for(Integer resid: CloudSim.getCloudResourceList())
+                {
+                  BigDatacenter datacenter=(BigDatacenter) CloudSim.getEntity(resid);
+                  datacenterInitializeMap.put(datacenter.getId(), Boolean.FALSE);  
+                }
+                
+                // we gave data center enough time to initialize. Start the action...
+                for(Integer resid: CloudSim.getCloudResourceList())
+                {
+                  BigDatacenter datacenter=(BigDatacenter) CloudSim.getEntity(resid);
+                  sendNow(datacenter.getId(), CloudSimTags.RESOURCE_CHARACTERISTICS, getId());
+                }
 	}
 
 	@Override
@@ -377,11 +346,11 @@ public class GraphAppEngine extends SimEntity{
 	
         protected void startEXSourceStreams()
         {
-            for(int i=0;i<iotSources.size();i++)
+            for(int i=0;i<externSources.size();i++)
             {
-                IotDevice ex=iotSources.get(i);
+                ExternalSource ex=externSources.get(i);
                 int exid=ex.getId();
-                sendNow(exid,IotDevice.SEND_STREAM);
+                sendNow(exid,ExternalSource.SEND_STREAM);
             }
         }
         
@@ -391,9 +360,9 @@ public class GraphAppEngine extends SimEntity{
             
             String printTotalOfProcessedStreamsPerCloudlet="";
             //Stop sending more streams from External Sources
-            for(IotDevice ex: iotSources)
+            for(ExternalSource ex: externSources)
             {
-                sendNow(ex.getId(), IotDevice.STOP_SENDING_STREAM);
+                sendNow(ex.getId(), ExternalSource.STOP_SENDING_STREAM);
             }
             
             //Stop services and their cloudlets
@@ -428,53 +397,10 @@ public class GraphAppEngine extends SimEntity{
             endTime =  CloudSim.clock();
             
             totalProcessedStreams=totalOfProcessedStreams;
-            System.out.println("The average latency is ***"+avgLatency);
-            CloudSim.terminateSimulation();
-       }
+        }
         
         public static double getMinDPUnit()
         {
             return minDPUnit;
         }
-        
-        
-        protected void processAverageLatency() {
-        	
-        	//Get latency and processed streams size
-            double totalAvgLatencyForCloudlets=0.0;
-            int numOfCloudlets=0;
-            //double totalOfProcessedStreams=0;
-            for(Integer serviceid: serviceMap.keySet())
-            {
-                Service service=serviceMap.get(serviceid);
-                try {
-                    //Make status of Cloudlet as SUCCESS to stop running service (stope service) 
-                    for(ServiceCloudlet cl: service.getServiceCloudlets())
-                    {
-                        //totalOfProcessedStreams+=cl.totalOfProcessedStream;
-                        totalProcessedData+=cl.totalOfProcessedStream;
-                        totalAvgLatencyForCloudlets+= cl.avgLatency;
-                        numOfCloudlets++;
-                    }
-                    //JOptionPane.showMessageDialog(null, task.getServiceCloudlet().getCloudletStatusString());
-                } catch (Exception ex) {
-                    //
-                }
-            }
-            //Calculate average latency across all cloudlets
-            double avgLatencyPerSec = totalAvgLatencyForCloudlets/ numOfCloudlets;
-            avgLatency= (avgLatency + avgLatencyPerSec) /2;
-                    
-            schedule(getId(),1, AVG_LAT);
-        }
-        
-        protected void processCloudletReturn(SimEvent ev) {
-        	
-        }
-        private void processCloudletCancel(SimEvent ev) {
-        	
-        }
-      
-        
-       
 }
