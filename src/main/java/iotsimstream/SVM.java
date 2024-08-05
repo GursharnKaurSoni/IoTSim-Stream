@@ -22,6 +22,13 @@ public class SVM extends Vm{
         outputQueue=new LinkedList<>();
     }
     
+    public Queue<Stream> getInputQueue() {
+		return inputQueue;
+	}
+	public Queue<Stream> getOutputQueue() {
+		return outputQueue;
+	}
+    
     public void addStreamToInputQueue(Stream s)
     {
         inputQueue.add(s);

@@ -1,11 +1,13 @@
 package iotsimstream.schedulingPolicies;
 
+import iotsimstream.Properties;
 import iotsimstream.ProvisionedSVm;
 import iotsimstream.SVM;
 import iotsimstream.Service;
 import iotsimstream.ServiceCloudlet;
 import iotsimstream.ServiceCloudletSchedulerSpaceShared;
 import iotsimstream.Stream;
+import iotsimstream.edge.EdgeSVM;
 import iotsimstream.vmOffers.VMOffers;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -58,6 +60,7 @@ public class SimpleSchedulingPolicy extends Policy {
                 LinkedHashMap<Integer, Integer> ServiceSelectedDatacenterMap= new LinkedHashMap<>(); 
                 
                 Random generator=new Random(provisioningSeed);
+                VMOffers vmOffers = null;
                   
                 for(Service service: services)
                 {
@@ -87,7 +90,7 @@ public class SimpleSchedulingPolicy extends Policy {
                     //Add service id and selected datacenter (random picked one) to map
                     ServiceSelectedDatacenterMap.put(serviceID, selectedDatacenterID);
                     
-                    VMOffers vmOffers=datacentersWithVMOffers.get(selectedDatacenterID);
+                    vmOffers=datacentersWithVMOffers.get(selectedDatacenterID);
                     Set setVms= vmOffers.getVmOffers().keySet();
                     
                     ArrayList<Vm> vms = new ArrayList<Vm>(setVms);
@@ -177,24 +180,27 @@ public class SimpleSchedulingPolicy extends Policy {
                     ArrayList<Integer> vmidList = new ArrayList<Integer>();    
                     int placementDatacenterID=ServiceSelectedDatacenterMap.get(serviceID); //the same for all selected vms since we provisioned all vms for a service from one cloud
                     for(Integer vmid: ServiceVMsMap.get(serviceID)) //for each vm; it must be using ServiceSelectedDatacenterMap to get corresponding datacenterid for this vmid
-                    {    
-                        Vm instance = datacentersWithVMOffers.get(placementDatacenterID).getVM(vmid); //cloud provider instance
-                        double vmCost=datacentersWithVMOffers.get(placementDatacenterID).getVmOffers().get(instance);
-
-                        SVM newVm = new SVM(vmId,ownerId,instance.getMips(),instance.getNumberOfPes(),instance.getRam(),instance.getBw(),instance.getSize(),"", new ServiceCloudletSchedulerSpaceShared());
-                        provisioningInfo.add(new ProvisionedSVm(newVm,0,0,vmCost,placementDatacenterID));
-                        
-                        //Create new ServiceCloudlet for this vm
-                        ServiceCloudlet cl=new ServiceCloudlet(cloudletCont,1,newVm.getNumberOfPes(),0,0,new UtilizationModelFull(),new UtilizationModelFull(),new UtilizationModelFull(),serviceSize,ownerId,serviceID);
-                        cl.setVmId(newVm.getId());
-                        service.addCloudlet(cl);
-                        vmidList.add(newVm.getId());
-                        cloudletCont++;
-                        vmId++;
-                    }
-                    
+					{
+						Vm instance = datacentersWithVMOffers.get(placementDatacenterID).getVM(vmid); // cloud provider
+																										// instance
+						double vmCost = datacentersWithVMOffers.get(placementDatacenterID).getVmOffers().get(instance);
+						vmOffers = datacentersWithVMOffers.get(placementDatacenterID);
+						if (vmOffers.getDataCenterType().equalsIgnoreCase("EdgeDataCenter")) {
+							EdgeSVM edgeSVM = new EdgeSVM(Properties.EDGE_HOST_TYPE.getProperty(placementDatacenterID), vmId, ownerId, instance.getMips(),
+									instance.getNumberOfPes(), instance.getRam(), instance.getBw(), instance.getSize(),
+									"", new ServiceCloudletSchedulerSpaceShared());
+							provisionAndAddCloudlet(edgeSVM, vmCost, placementDatacenterID, serviceSize, ownerId,
+									serviceID, service, vmidList);
+						} else {
+							SVM svm = new SVM(vmId, ownerId, instance.getMips(), instance.getNumberOfPes(),
+									instance.getRam(), instance.getBw(), instance.getSize(), "",
+									new ServiceCloudletSchedulerSpaceShared());
+							provisionAndAddCloudlet(svm, vmCost, placementDatacenterID, serviceSize, ownerId, serviceID,
+									service, vmidList);
+						}
+					
                     schedulingTable.put(service.getId(), vmidList);
-
+                 
                     //set stream dependencies info
                     for(Stream stream:service.getStreamDependencies()){
                             if(!streamRequiredLocation.containsKey(stream.getId())){
@@ -220,4 +226,21 @@ public class SimpleSchedulingPolicy extends Policy {
                     }
 		}
 	}
+        }
+	
+	
+	
+	private void provisionAndAddCloudlet(SVM svm, double vmCost, int placementDatacenterID, Double serviceSize, int ownerId, int serviceID, Service service, ArrayList<Integer> vmidList) {
+		provisioningInfo.add(new ProvisionedSVm(svm, 0, 0, vmCost, placementDatacenterID));
+		ServiceCloudlet cl = new ServiceCloudlet(cloudletCont, 1, svm.getNumberOfPes(), 0, 0,
+				new UtilizationModelFull(), new UtilizationModelFull(), new UtilizationModelFull(),
+				serviceSize, ownerId, serviceID);
+		cl.setVmId(svm.getId());
+		service.addCloudlet(cl);
+		vmidList.add(svm.getId());
+		cloudletCont++;
+		vmId++;
+}
+
+	
 }

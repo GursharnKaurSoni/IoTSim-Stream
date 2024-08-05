@@ -12,12 +12,13 @@ package iotsimstream;
  *    Properties.NAME.getProperty();
  * 4. make the appropriated conversion to the desirable type.
  * 
+ * <p> Modified by: Gursharn Soni </p>
  */
 
 public enum Properties {
     
 	SIMULATION_TIME("simulation.time"),
-        DATACENTERS("cloud.datacenter"),
+    DATACENTERS("cloud.datacenter"),
 	HOSTS_PERDATACENTER("datacenter.hosts"),
 	VM_DELAY("vm.delay"),
 	VM_OFFERS("vm.offers"),
@@ -25,16 +26,27 @@ public enum Properties {
 	MEMORY_PERHOST("host.memory"),
 	STORAGE_PERHOST("host.storage"),
 	MIPS_PERCORE("core.mips"),
-        ENGINE_NETWORK_BANDWIDTH("engine.network.bandwidth"),
+    ENGINE_NETWORK_BANDWIDTH("engine.network.bandwidth"),
 	ENGINE_NETWORK_LATENCY("engine.network.latency"),
 	INTERNAL_LATENCY("internal.latency"),
 	INTERNAL_BANDWIDTH("internal.bandwidth"),
-        EXTERNAL_LATENCY("external.latency"),
+    EXTERNAL_LATENCY("external.latency"),
 	EXTERNAL_BANDWIDTH("external.bandwidth"),
 	SCHEDULING_POLICY("scheduling.policy"),
-	DAG_FILE("dag.file")
-        ;
-	
+	DAG_FILE("dag.file"),
+    EDGE_HOST_TYPE("edge.host.type"),
+	EDGE_HOST("edge.hosts"),
+	EDGE_HOST_CORES("edge.host.cores"),
+	EDGE_MIPS_PERCORE("edge.host.cores.mips"),
+	EDGE_HOST_STORAGE("edge.host.storage"),
+	EDGE_HOST_MEMORY("edge.host.memory"),
+	EDGE_VM_DELAY("edge.vm.delay"),
+	EDGE_EXTERNAL_BANDWIDTH("edge.external.bandwidth"),
+	EDGE_EXTERNAL_LATENCY("edge.external.latency"),
+	EDGE_VM_OFFERS("edge.vm.offers"),
+	EDGE_DATACENTER("edge.datacenter")
+	;
+
 	private String key;
 	private Configuration configuration = Configuration.INSTANCE;
 	

@@ -25,7 +25,9 @@ public class ServiceCloudletSchedulerSpaceShared extends CloudletScheduler {
          * according to the mips share provided to it by
          * {@link #updateVmProcessing(double, java.util.List)} method. */
 	protected int currentCpus;
-        
+	double countTime;
+    int countNum;    
+	
 
 	/** The number of used PEs. */
 	protected int usedPes;
@@ -195,6 +197,21 @@ public class ServiceCloudletSchedulerSpaceShared extends CloudletScheduler {
                                         processedStresms=processedStresms.substring(0, processedStresms.length()-2) + ")";
                                         Log.printLine(CloudSim.clock()+": ServiceCloudlet#"+cl.getCloudletId()+" is processed Input Streams"+ processedStresms + " and produced Output Stream #"+cl.producedOutputStreams.get(0).getId());   
                                         cl.totalOfProcessedStream+=approxProcessedStreamPortionsSize;
+                                        
+                                        //For stream latency - Get the time arrival of the last stream to be used in calculating avgerage latency
+                                        double lastTimeArrival=Double.MIN_VALUE;
+                                        //Stream p=null;
+                                        for(Integer sid:workingInputStreamMap.keySet()) {
+                                            if(workingInputStreamMap.get(sid).getStreamArrivalTime()>lastTimeArrival)
+                                            {
+                                                lastTimeArrival= workingInputStreamMap.get(sid).getStreamArrivalTime();
+                                            }
+                                        }  
+                                        
+                                        countTime = countTime + CloudSim.clock()- lastTimeArrival;
+                                        countNum++;
+                                        cl.avgLatency = countTime/countNum;
+                                        
                                     }
 
                                     //Clear all working streams to be ready for next processing 

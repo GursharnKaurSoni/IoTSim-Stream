@@ -1,21 +1,26 @@
 package iotsimstream.schedulingPolicies;
 
-import iotsimstream.ExternalSource;
-import iotsimstream.GraphAppEngine;
-import iotsimstream.ProvisionedSVm;
-import iotsimstream.Service;
-import iotsimstream.Stream;
-import iotsimstream.vmOffers.VMOffers;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
+
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
+
 import org.cloudbus.cloudsim.Log;
 import org.xml.sax.Attributes;
 import org.xml.sax.helpers.DefaultHandler;
+
+import iotsimstream.IotDevice;
+import iotsimstream.GraphAppEngine;
+import iotsimstream.ProvisionedSVm;
+import iotsimstream.Service;
+import iotsimstream.Stream;
+import iotsimstream.vmOffers.VMOffers;
 
 /**
  * This class implements the abstract policy for provisioning and scheduling of a DAG
@@ -36,8 +41,8 @@ public abstract class Policy extends DefaultHandler {
 	ArrayList<Service> entryServices;
 	ArrayList<Service> exitServices;
 	ArrayList<Service> services;
-        ArrayList<ExternalSource> externalSources;
-        private LinkedHashMap<Integer, VMOffers> datacenterWithVMOffers;
+    ArrayList<IotDevice> iotDevices;
+    private LinkedHashMap<Integer, VMOffers> datacenterWithVMOffers;
 	Hashtable<Integer,HashSet<Integer>> streamRequiredLocation;
 	Hashtable<Integer,ArrayList<Integer>> schedulingTable; //each entry is service (serviceid) and list of vms (vmids), where coudlets of such service will be scheduled on these vms, one cloudlet per vm
 	ArrayList<ProvisionedSVm> provisioningInfo;
@@ -48,7 +53,7 @@ public abstract class Policy extends DefaultHandler {
 	 * to the Graph Application Engine.
 	 * @param datacentersWithVMOffers the VMOffers object that encapsulates information on available IaaS instances
 	 */
-        public abstract void doScheduling(LinkedHashMap<Integer, VMOffers> datacentersWithVMOffers);
+   public abstract void doScheduling(LinkedHashMap<Integer, VMOffers> datacentersWithVMOffers);
 
 	public Policy(){
 
@@ -72,7 +77,7 @@ public abstract class Policy extends DefaultHandler {
 		this.exitServices = new ArrayList<Service>();
 		this.services = new ArrayList<Service>();
 		
-                externalSources=new ArrayList<ExternalSource>();
+                iotDevices=new ArrayList<IotDevice>();
                 
 		this.streamRequiredLocation = new Hashtable<Integer,HashSet<Integer>>();
 		this.schedulingTable = new Hashtable<Integer,ArrayList<Integer>>();
@@ -115,8 +120,8 @@ public abstract class Policy extends DefaultHandler {
         /**
 	 * @return the list of external sources
 	 */
-        public ArrayList<ExternalSource> getExternalSources() {
-            return externalSources;
+        public ArrayList<IotDevice> getIoTSources() {
+            return iotDevices;
         }
 	
         /**
@@ -203,10 +208,11 @@ public abstract class Policy extends DefaultHandler {
 		/*
 		 * Elements can be one of: 'adag' 'externalsources' 'exsource' 'service' 'uses' 'child' 'parent'
 		 */
+		IotDevice iotsource = null;
                 
 		if(qName.equalsIgnoreCase("adag")){//get number of services and set it to serviceCOunt variable in SimulationParameters class
                     String sCount = attributes.getValue("serviceCount");	
-                } else if(qName.equalsIgnoreCase("externalsources")){//starting of external sources
+                } else if(qName.equalsIgnoreCase("iotsources")){//starting of external sources
                 
 		} else if(qName.equalsIgnoreCase("service")){//a new service is being declared
                     
@@ -220,7 +226,7 @@ public abstract class Policy extends DefaultHandler {
                         if(attributes.getValue("userreq") !=null)
                             userDPRateReq= Double.parseDouble(attributes.getValue("userreq")); //MB/s;
                         
-                        Service service = new Service(serviceCount,ownerId,serviceDPReq,userDPRateReq);
+                        Service service = new Service(serviceCount,ownerId,serviceDPReq,userDPRateReq,false,0);
 			xmlServiceIDsMap.put(id, service);
                         serviceMap.put(service.getId(), service);
 			services.add(service);
@@ -231,18 +237,40 @@ public abstract class Policy extends DefaultHandler {
 			cloudletCont++;
                         serviceCount++;
                         
-                } else if(qName.equalsIgnoreCase("exsource")){//a external source dependency from the current service
+                } else if(qName.equalsIgnoreCase("iotsource")){//a external source dependency from the current service
                         String exid = attributes.getValue("id");
                         String exname = attributes.getValue("name");
                         
-                        double datarate=Double.parseDouble(attributes.getValue("datarate")); //Unit MB/s
-                        
+						// setting the properties for IOT device by reading workflow
+						String iotType = attributes.getValue("iottype");
+						String networkType = attributes.getValue("networktype");
+						String communicationProtocol = attributes.getValue("communicationprotocol");
+						String iotClassName = attributes.getValue("iotclass");
+						
+					    double datarate=Double.parseDouble(attributes.getValue("datarate")); //Unit MB/s
+
+						try {
+							Class<?> clazz = Class.forName(iotClassName);
+							if (!IotDevice.class.isAssignableFrom(clazz)) {
+								System.out.println("this class is not correct type of ioT Device");
+								return;
+							}
+
+							Constructor<?> constructor = clazz.getConstructor(String.class, int.class, int.class, double.class, String.class, String.class);
+							iotsource = (IotDevice) constructor.newInstance(exname , dataItemCont, ownerId,datarate,networkType, communicationProtocol );
+							
+						} catch (ClassNotFoundException | NoSuchMethodException | SecurityException
+								| InstantiationException | IllegalAccessException | IllegalArgumentException
+								| InvocationTargetException e) {
+							e.printStackTrace();
+						}
+				                                    
                         //Create a new external source and set the id of stream according to the count 
-                        ExternalSource externalsource= new ExternalSource(exname , dataItemCont, ownerId,datarate);
+                        //ExternalSource externalsource= new ExternalSource(IoTType.CAR_SENSOR,exname , dataItemCont, ownerId,datarate);
                         
-                        externalSources.add(externalsource); //serviceid for external source is the cloudlet id
+                        iotDevices.add(iotsource); //serviceid for external source is the cloudlet id
                         
-                        Stream stream=externalsource.getStream();
+                        Stream stream=iotsource.getStream();
                         originalDataItems.add(stream);
                         dataItems.put(exid, stream);
                         dataItemCont++;
