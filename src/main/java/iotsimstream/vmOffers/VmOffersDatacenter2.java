@@ -1,16 +1,10 @@
 package iotsimstream.vmOffers;
 
+import iotsimstream.Properties;
+import java.util.Hashtable;
 import java.util.LinkedHashMap;
 
 import org.cloudbus.cloudsim.Vm;
-
-import iotsimstream.Properties;
-
-/**
- * This class provide different VM options offered by a particular Cloud provider
- *
- * @author Mutaz Barika
- */
 
 public class VmOffersDatacenter2 extends VMOffers {
 	
@@ -53,17 +47,5 @@ public class VmOffersDatacenter2 extends VMOffers {
 	@Override
 	public long getBootTime() {
 		return Long.parseLong(Properties.VM_DELAY.getProperty());
-	}
-
-
-	@Override
-	public LinkedHashMap<Vm,Integer> getVmOffersBootTime() {
-		LinkedHashMap<Vm, Integer> vmOffersBootTimeTable= new LinkedHashMap<Vm, Integer>();
-		for(Vm vm: vmOffersTable.keySet())
-        {
-            int boottime= 0;
-            vmOffersBootTimeTable.put(vm, boottime);
-		}
-		return vmOffersBootTimeTable;
 	}
 }
