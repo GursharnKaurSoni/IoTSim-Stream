@@ -17,10 +17,3 @@ Please cite the following paper when using the simulator in scientific research:
   * Java Platform: JDK version 11+ (recommended)
   * Any IDE for Java programming language such as NetBeans or Eclipse
 
-# IoTSim-Stream (New Version 2.0) - Edge-enabled IoTSim-Stream
-Open-source simulation software to model and simulate stream workflow applications in cloud and edge computing environments.
-
-## Unique Features
-  * Support modelling data incentive IoT-based applications using stream processing model (aka stream graph applications).
-  * Support modelling edge computing environment in addition to multicloud enviroment as an execution environment for stream graph application.
-  * Support user-defined resource provisioning and scheduling policies.
