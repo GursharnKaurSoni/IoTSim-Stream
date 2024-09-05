@@ -25,7 +25,7 @@ import org.cloudbus.cloudsim.core.SimEvent;
  * transfer delays if data has to be moved between VMs in datacenter
  * or to VM in another datacenter.
  */
-public class BigDatacenter extends Datacenter {
+public class BigDatacenter extends Datacenter { 
 	
 	public static final int UPDATE_NETWORK = 455671;
 	public static final int TRANSFER_STREAM = 455672;
